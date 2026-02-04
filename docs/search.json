@@ -4,7 +4,7 @@
     "href": "index.html",
     "title": "Daniel Kadoke",
     "section": "",
-    "text": "I am Daniel, a biostatistician with a strong passion for data-driven research and evidence-based decision making. I work extensively with R and Stata to analyze, model, and interpret complex health and biological data. I am highly hardworking, detail-oriented, and committed to delivering accurate, reliable, and impactful results. I enjoy turning data into clear insights that support research, policy, and real-world solutions."
+    "text": "I am Daniel Kadoke, a biostatistician with a strong passion for data-driven research and evidence-based decision making. I work extensively with R and Stata to analyze, model, and interpret complex health and biological data. I am highly hardworking, detail-oriented, and committed to delivering accurate, reliable, and impactful results. I enjoy turning data into clear insights that support research, policy, and real-world solutions."
   },
   {
     "objectID": "posts/post-with-code/index.html",
@@ -18,13 +18,27 @@
     "href": "portifolio.html",
     "title": "My portifolio",
     "section": "",
-    "text": "Project Description\n\n\n\n\n\n\nnews\n\n\nideas\n\n\nwebsite\n\n\n\n\n\n\n\n\n\nFeb 4, 2026\n\n\nDaniel Kadoke Nyakwela\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\nFeb 1, 2026\n\n\nDaniel Kadoke Nyakwela\n\n\n\n\n\n\nNo matching items"
+    "text": "Project Description\n\n\n\n\n\n\nnews\n\n\nideas\n\n\nwebsite\n\n\n\n\n\n\n\n\n\nFeb 4, 2026\n\n\nDaniel Kadoke Nyakwela\n\n\n\n\n\n\n\n\n\n\n\n\nStatistics\n\n\n\n\n\n\nIdeas\n\n\n\n\n\n\n\n\n\nFeb 1, 2026\n\n\nDaniel Kadoke Nyakwela\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\nFeb 1, 2026\n\n\nDaniel Kadoke Nyakwela\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/welcome/index.html",
     "href": "posts/welcome/index.html",
     "title": "Welcome To My Blog",
     "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
+    "text": "This is the first post in a Quarto blog. Welcome!\n\nThe image you see Above highlights essential elements, especially in the world of data analytics. A statistician begins the day early before the noise and distractions set in. The pen is always the first to move, sketching questions in the notebook: 1.Why did the model fail? 2.What does the data really say?\nThis is where Probability Theory and Statistical Inference take shape on paper, transforming curiosity into clear, testable hypotheses.\nWith a cup of coffee beside the notebook, coding begins. Coffee sharpens focus, and writing ideas down helps organize thought, enabling the statistician to reason carefully while working through R, Python, and statistical models. In this quiet moment, patterns begin to emerge and numbers start to speak.\nA powerful, reliable computer makes the work smoother and more enjoyable. Many analytical tasks, such as fitting complex regression models, generating visualizations, and running simulations require strong computing power. A slow system can interrupt thinking and reduce productivity. This is the core of Data Analysis, Machine Learning, and Applied Statistics, where efficiency matters.\nThe phone is present not as a distraction, but as a gateway to opportunity. A data analyst stays alert to new trends, research updates, and career possibilities. Then it chimes with a message from a teammate: “Can you explain the result?” A quick response and a shared chart follow. This is where Data Visualization, Communication for Data Science, and Reproducible Research become essential because insights only matter when they are understood and trusted.\nTogether, these simple objects tell a powerful story: data analysis is not just about numbers it is about thinking critically, learning continuously, communicating clearly, and staying curious."
+  },
+  {
+    "objectID": "posts/welcome/2026-02-05-statistics-for-business.html",
+    "href": "posts/welcome/2026-02-05-statistics-for-business.html",
+    "title": "Statistics",
+    "section": "",
+    "text": "If you want, I can write you a ready-to-go template for a Quarto blog post with all your “statistician motivation + tools + coffee + computer + phone” story included. That way you can just copy, paste, and publish immediately."
+  },
+  {
+    "objectID": "posts/welcome/2026-02-05-principle.html",
+    "href": "posts/welcome/2026-02-05-principle.html",
+    "title": "The Five Steps to Trustworthy Analysis",
+    "section": "",
+    "text": "Data analysis principle!\n\nBefore opening R, Python, or any software, take time to understand the question, the context, and the data generating process. Good analysis does not start with code it starts with clear thinking. Ask yourself: What decision will this analysis inform? What does success look like?\nWriting ideas in a notebook helps structure your thoughts. Sketch assumptions, note possible biases, and outline the steps you plan to take. This habit strengthens reasoning and prevents blind trial-and-error modeling.\n-Once coding begins, work step by step:\n-Explore the data before modeling\n-Visualize patterns before fitting equations\n-Validate assumptions before interpreting results"
   }
 ]

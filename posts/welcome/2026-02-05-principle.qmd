@@ -1,0 +1,22 @@
+---
+title: "The Five Steps to Trustworthy Analysis"
+author: "Daniel Kadoke Nyakwela"
+date: "2026-02-01"
+categories: [Ideas]
+---
+
+Data analysis principle!
+
+![](Pic.JPG)
+
+Before opening R, Python, or any software, take time to understand the question, the context, and the data generating process. Good analysis does not start with code it starts with clear thinking. Ask yourself: What decision will this analysis inform? What does success look like?
+
+Writing ideas in a notebook helps structure your thoughts. Sketch assumptions, note possible biases, and outline the steps you plan to take. This habit strengthens reasoning and prevents blind trial-and-error modeling.
+
+-Once coding begins, work step by step:
+
+-Explore the data before modeling
+
+-Visualize patterns before fitting equations
+
+-Validate assumptions before interpreting results
