@@ -1,0 +1,15 @@
+{
+  "hash": "04a6412742cd38fa27ac7210ede19924",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Project description\"\nauthor: \"Daniel Kadoke Nyakwela\"\ndate: \"2026-02-04\"\ncategories: [news, ideas, website]\nimage: \"image.jpg\"\n---\n\n\n\nThis is was a project Idea presented on January 2026. You can find the project \\[here\\](<https://dakanmill.github.io/Rice-Solution1/#>)\n\n\n\n::: {.cell}\n\n```{.r .cell-code}\n1 + 1\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\n[1] 2\n```\n\n\n:::\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

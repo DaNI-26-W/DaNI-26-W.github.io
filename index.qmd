@@ -1,0 +1,12 @@
+---
+title: "Daniel Kadoke"
+image: Dani.jpeg
+about:
+  template: jolla
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/DaNI-26-W
+---
+
+I am Daniel, a biostatistician with a strong passion for data-driven research and evidence-based decision making. I work extensively with R and Stata to analyze, model, and interpret complex health and biological data. I am highly hardworking, detail-oriented, and committed to delivering accurate, reliable, and impactful results. I enjoy turning data into clear insights that support research, policy, and real-world solutions.

@@ -1,0 +1,9 @@
+---
+title: "Project Description"
+author: "Daniel Kadoke Nyakwela"
+date: "2026-02-04"
+categories: [news, ideas, website]
+image: "image.jpg"
+---
+
+This was a project Idea presented on January 2026. You can find the project \[here\](<https://dakanmill.github.io/Rice-Solution1/#>)
