@@ -1,1 +1,1 @@
-![](Curr.pdf){width=100% height=1000px}
+<iframe src="Curr.pdf" height=100% width=100%>
