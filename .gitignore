@@ -46,4 +46,9 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
+# Quarto project internal files
+.quarto/
+.quarto/preview/lock
+
+
 /.quarto/
