@@ -23,4 +23,6 @@ format:
     theme: cosmo
     css: styles.css
     include-after-body: _footer.qmd
+    toc: true
+    self-contained: false
 

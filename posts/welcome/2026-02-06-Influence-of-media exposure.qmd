@@ -1,0 +1,925 @@
+---
+title: "Influence of Media Exposure and Health Facility Contact on Family Planning Awareness Among Women of Reproductive Age in Tanzania"
+subtitle: "The Graph Course: Final Project June 2025"
+author: "Daniel Kadoke Nyakwela"
+date: today
+format:
+  html:
+    toc: true
+---
+
+
+<!-- Custom HTML and style to add logo and custom font [DO NOT EDIT THIS SECTION] -->
+
+<img src="Family.png" style="position:absolute; top:0; right:0; padding:10px;" width="146"/>
+
+
+
+
+```{=html}
+<style>
+h1 {
+    font-family: Playfair Display, Georgia, Times New Roman, "Liberation Serif", serif;
+}
+</style>
+```
+
+<!--- End of Custom HTML; Start of R Code --->
+
+```{r include = F}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+# Load packages
+if (!require(pacman)) install.packages("pacman")
+pacman::p_load(plotly, tidyverse, reactable, here, scales, janitor, haven, ggplot2, flextable, skimr, forcats, dplyr, shiny, patchwork)
+
+```
+
+
+# Introduction
+
+Family planning (FP) is a vital aspect of reproductive health and autonomy. It enables individuals and couples to plan births and space children, which contributes significantly to maternal and child well-being, gender equality, and economic development. In Tanzania, where the fertility rate remains high and unmet need for contraception persists, improving FP awareness and access is a national priority.
+
+Among the many factors influencing awareness and adoption of family planning methods, exposure to mass media and contact with health facilities play a pivotal role. Mass media campaigns delivered via radio, television, newspapers, or mobile phones can disseminate crucial reproductive health information across broad segments of the population. Simultaneously, interpersonal communication with health professionals during clinic visits offers tailored education, clarification, and emotional support.
+
+This project investigates not only the general awareness of family planning among women of reproductive age in Tanzania but more importantly how different forms of media exposure and health facility contact influence that awareness. The core metric for influence is whether women recall any FP method and whether they cite specific sources such as radio, TV, SMS, newspapers, or health professionals as the source of their knowledge. This distinction allows us to move beyond mere awareness levels and explore how that awareness was acquired.
+
+
+## Abbreviations
+
+| Abbreviation | Full Meaning                                               |
+|--------------|------------------------------------------------------------|
+| FP           | Family Planning                                            |
+| TDHS         | Tanzania Demographic and Health Survey                     |
+| FPM          | Family Planing Methods                              |
+| mHealth      | Mobile Health                                              |
+| SMS          | Short Message Service                                      |
+| TV           | Television                                                 |
+| R            | R Statistical Programming Language                         |
+| NGO          | Non-Governmental Organization                              |
+
+
+
+## Main objective:
+
+To assess how media exposure and health facility contact influence awareness of family planning (FP) among women of reproductive age in Tanzania.
+
+
+### Objectives
+
+-   To determine the proportion of Tanzanian women aged 15–49 who are aware of at least one family planning (FP) method.
+
+-   To examine the influence of specific media channels—such as radio, television, newspapers, and SMS—on FP awareness by assessing whether women cite these as sources of information.
+
+-   To evaluate the role of health facility contact in shaping FP knowledge, particularly through interactions with health professionals.
+
+-   To identify disparities in media and health system influence across key demographic groups, including age, educational attainment, and place of residence.
+
+
+## Methodology
+
+This analysis draws on data from the Tanzania Demographic and Health Survey (TDHS), using the Women's Individual Recode dataset. After importing the dataset using the haven package, several data wrangling procedures were conducted with the help of the dplyr package to prepare the data for analysis.
+
+The steps included:
+
+-   Selecting relevant variables such as FP awareness, source of information, and key demographic characteristics using col_select().
+
+-   The dataset was filtered to include only respondents who reported at least one known source of their family planning method, using filter(), to ensure the analysis focused on relevant cases within the target population..
+
+-   Recoding and renaming variables for clarity using mutate() and case_when() to make the dataset more interpretable.
+
+-   Grouping and summarizing data using group_by() and summarize() to calculate proportions and trends in FP awareness across subgroups.
+
+-   Converting categorical variables into factors with meaningful labels using as_factor() from the haven package.
+
+After wrangling the data, the analysis focused on the following key variables:
+
+-   Whether respondents were aware of any family planning (FP) method, and whether they could identify the source of their FP knowledge.
+
+-   The specific source(s) from which respondents reported learning about FP such as radio, television, newspapers, SMS messages, or health workers.
+
+-   Core demographic and socioeconomic factors, including age, educational attainment, and place of residence (urban or rural).
+
+Visualizations were created using the ggplot2 package to illustrate patterns in FP awareness and source recall across different groups. A summary table was also generated using the flextable package to clearly present aggregate insights. The analysis aimed to identify which information channels were most influential and how their impact varied across population subgroups.
+
+
+
+
+
+
+
+
+```{r}
+# Import the .dta file and add the 5 malaria knowledge variables
+ir_ng_18_raw <- haven::read_dta(here("posts/welcome/Data/TZIR7BFL.DTA"),
+                  col_select = c(
+                    # The source of awareness about family planning
+                    v384a, v384b, v384c, v384d, v393, v393a ,v394, v395,                                       
+                    # Source of family planning 
+                    v3a00y ,v3a00z,v3a05,v3a04,                   
+                    
+                    # Source for any known method  
+                    v380, v301,
+                    
+                    # basic information
+                    v012, v730, v013,
+                    
+                    #Level of education of respondents 
+                    v701, v106, v702,
+                    
+                    # information on marital status
+                    v501, v504, v505,
+                    
+                    # number of children and current pregnancy
+                    v218, v219, v220,
+                    
+                    # Residence of respondents and time lived in a place
+                    v025, v024,v104,
+                    
+                    # Occupation of respondents
+                    v704, v705, v716, 
+                    
+                    ))
+```
+
+
+
+```{r include=FALSE}
+## Checking Variables
+
+# Load the dlookr package
+pacman::p_load(dlookr)
+
+# Use the `diagnose()` function to see the missing value count
+diagnose(ir_ng_18_raw)
+```
+
+
+```{r}
+# Renaming the variables
+ir_renamed <-
+  ir_ng_18_raw %>%
+  rename(Respondents_current_Age = v012,
+         Husband_or_partners_Age  = v730,
+         Age_in_5_year_groups  = v013,
+         Type_of_place_of_residence =v025,
+         Region = v024,
+         Years_lived_in_place_of_residence = v104,
+         Husband_or_partners_Education_Level  = v701,
+         Highest_Educational_Eevel  = v106,
+         Husband_or_partner_Highest_Year_of_Education = v702,
+         Husband_or_partner_Occupation  = v704,
+         Husband_or_partners_Occupation_grouped = v705,
+         Respondents_Occupation  = v716,
+         Current_marital_status  = v501, 
+         Currently_Residing_with_husband_or_partner = v504,
+         Number_of_other_wives = v505,
+         Number_of_living_children = v218,
+         Living_Children_and_pregnancy = v219,
+         Living_children_and_pregnancy_grouped = v220,
+         Knows_any_FP_method = v380,
+         Heard_about_FP_on_Radio = v384a,
+         Heard_about_FP_on_TV = v384b,
+         Heard_about_FP_on_Newspaper_or_magazine = v384c,
+         Heard_about_FP_by_SMS= v384d,
+         Visited_by_Fieldworkers_last_12_months = v393,
+         Did_fieldworker_talk_about_FP = v393a,
+         Visited_by_Health_facility_last_12_months = v394,
+         Told_about_FP_at_Health_facility = v395,
+         Source_of_FP_for_non_user_no_so= v3a00y,
+         Source_of_FP_for_non_users_any_so = v3a00z,
+         Told_about_FP_method = v3a05,
+         Source_known_any_method = v380,
+         Told_how_to_deal_with_side_effects = v3a04,
+         Knowledge_of_any_method = v301)
+```
+
+
+
+```{r}
+# Add function to convert from labelled data to regular factors
+ir_ng_18_clean <- 
+  ir_renamed %>% 
+  haven::as_factor()
+```
+
+```{r}
+# Review data classes of the newly converted variables
+#glimpse(ir_ng_18_clean)
+
+# Summary statistics for all variables
+#skim(ir_ng_18_clean)
+```
+
+
+
+```{r}
+# Clean variable names
+tb_clean1 <- janitor::clean_names(ir_ng_18_clean)
+
+```
+
+
+```{r}
+# To consider the following grouped summary
+cases_per_district_per_year <- 
+  tb_clean1 %>% 
+  group_by(region) %>% 
+  count(husband_or_partners_age) %>% 
+  ungroup()
+```
+
+# Results and Findings
+
+## To begin, we assess the general level of awareness regarding FP and any contraceptive method among women in Tanzania.
+
+###  How widespread is awareness of FP methods among women?
+
+```{r}
+number_of_women <- tb_clean1 %>%
+  count(knowledge_of_any_method) %>%
+  mutate(percent = 100 * n / sum(n))
+gt::gt(number_of_women)
+```
+
+
+```{r}
+# Create the plot
+ggplot(tb_clean1, aes(x = knowledge_of_any_method)) +
+  geom_bar(
+    fill = "steelblue",          # Bar color
+    alpha = 0.8,                # Transparency (0-1)
+    width = 0.7                 # Bar width (0-1)
+  ) +
+  labs(
+    title = "Family Planning Awareness of Any method Among Women in Tanzania",
+    subtitle = "Based on Tanzania DHS Data",
+    x = "Knowledge of any method",
+    y = "Number of Women",
+    caption = "Data Source: Tanzania Demographic and Health Survey"
+  ) +
+  theme_minimal(base_size = 12) +  # Base font size
+  theme(
+    axis.text.x = element_text(
+      angle = 45, 
+      hjust = 1,           # Better alignment for rotated labels
+      vjust = 1,           # Vertical adjustment
+      size = 10            # Label font size
+    ),
+    plot.title = element_text(
+      face = "bold",       # Bold title
+      size = 14,
+      hjust = 0.5          # Center title
+    ),
+    plot.subtitle = element_text(
+      hjust = 0.5,         # Center subtitle
+      color = "gray40"
+    ),
+    panel.grid.major.x = element_blank()  # Remove vertical grid lines
+  ) +
+  scale_y_continuous(expand = c(0, 0))   # Remove padding below bars
+```
+
+The findings indicate that the majority of women in Tanzania are aware of at least one modern family planning (FP) method. This suggests that public health efforts and communication strategies promoting modern contraceptive methods have been largely effective in reaching the target population.
+
+In contrast, awareness of traditional and folkloric methods is extremely limited, with very few women reporting knowledge of these options. Similarly, only a small proportion of women reported not knowing any FP method at all. This pattern reflects a strong emphasis on modern methods in current reproductive health education and outreach programs.
+
+However, awareness alone is not the end point, further I explored where women recalled hearing or learning about these methods. This information offers direct evidence of media and health system influence.
+
+
+###  How many women recall where they learned about their known FP method?
+
+```{r}
+women_know_method <- tb_clean1 %>%
+  count(source_known_any_method) %>%
+  mutate(percent = 100 * n / sum(n))
+gt::gt(women_know_method)
+```
+
+
+```{r}
+# Create the plot
+ggplot(tb_clean1, aes(x = source_known_any_method)) +
+  geom_bar(
+    fill = "steelblue",          # Bar color
+    alpha = 0.8,                # Transparency (0-1)
+    width = 0.7                 # Bar width (0-1)
+  ) +
+  labs(
+    title = "Source of Any Method Awareness on FP Among Women in Tanzania",
+    subtitle = "Based on Tanzania DHS Data",
+    x = "Source of Known FPM",
+    y = "Number of Women",
+    caption = "Data Source: Tanzania Demographic and Health Survey"
+  ) +
+  theme_minimal(base_size = 12) +  # Base font size
+  theme(
+    axis.text.x = element_text(
+      angle = 45, 
+      hjust = 1,           # Better alignment for rotated labels
+      vjust = 1,           # Vertical adjustment
+      size = 10            # Label font size
+    ),
+    plot.title = element_text(
+      face = "bold",       # Bold title
+      size = 14,
+      hjust = 0.5          # Center title
+    ),
+    plot.subtitle = element_text(
+      hjust = 0.5,         # Center subtitle
+      color = "gray40"
+    ),
+    panel.grid.major.x = element_blank()  # Remove vertical grid lines
+  ) +
+  scale_y_continuous(expand = c(0, 0))   # Remove padding below bars
+```
+
+The results on family planning (FP) awareness sources among women in Tanzania reveal a concerning trend. A majority of respondents indicated “Don’t know” when asked where they learned about FP methods. This suggests that many women either cannot recall the source of their information or may have never received clear or direct communication about FP. The second most common source reported was government clinics or pharmacies, highlighting the important role that public health facilities continue to play in delivering FP information.
+
+In contrast, only a small number of women reported learning about FP from private clinics, pharmacies, shops, churches, or friends. These sources appear to have limited reach or influence in the current FP communication landscape. More notably, no respondents reported receiving FP information through government community delivery programs or NGOs, which points to a gap in outreach at the community and NGO levels.
+
+
+
+
+###   What proportion of women in rural and urban areas can identify the source of their FP knowledge?
+
+
+```{r}
+# Create the plot with dynamic color scaling
+fp_residence_plot <- tb_clean1 %>%
+  filter(!is.na(source_known_any_method), !is.na(type_of_place_of_residence)) %>%
+  ggplot(aes(x = type_of_place_of_residence, 
+             fill = source_known_any_method)) +
+  
+  geom_bar(
+    position = position_dodge(width = 0.8),
+    width = 0.7,
+    color = "white",
+    linewidth = 0.3
+  ) +
+  
+  # Dynamic color scaling based on actual categories
+  scale_fill_brewer(
+    palette = "Set2",  # Automatically handles multiple categories
+    name = "Source of known FPM"  # Legend title
+  ) +
+  
+  labs(
+    title = "Family Planning Awareness by Residence Type in Tanzania",
+    x = "Type of Residence",
+    y = "Number of Women",
+    caption = "Data Source: Tanzania Demographic and Health Survey"
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text = element_text(color = "black"),
+    legend.position = "top",
+    panel.grid.major.x = element_blank()
+  )
+
+# Display the plot
+fp_residence_plot
+```
+
+
+In both rural and urban areas of Tanzania, the majority of women reported not knowing the source of their family planning (FP) information, with rural women showing a higher proportion of “Don’t know” responses. In both settings, government clinics and pharmacies were the most commonly identified sources of FP awareness. Other sources such as private clinics, pharmacies, NGOs, community delivery, and informal contacts like shops or churches were mentioned by very few women, especially in rural areas. These results highlight a need for stronger and more targeted FP communication, particularly in rural areas, to ensure women receive and remember accurate information about family planning services.
+
+
+
+
+
+## We assess how exposure to various media sources—radio, television, SMS, and newspapers—relates to family planning awareness.
+
+```{r}
+#Frequency tables for each + Combined Bar Plot for media exposure overall
+# Clean and reshape + label exposure
+media_vars_level <- tb_clean1 %>%
+  select(heard_about_fp_on_radio, 
+         heard_about_fp_on_tv, 
+         heard_about_fp_on_newspaper_or_magazine, 
+         heard_about_fp_by_sms) %>%
+  pivot_longer(cols = everything(), names_to = "Media", values_to = "Exposure") %>%
+  mutate(
+    Exposure = case_when(
+      Exposure %in% c("yes", "Yes", "YES", 1) ~ "Yes",
+      Exposure %in% c("no", "No", "NO", 0) ~ "No",
+      is.na(Exposure) ~ "Missing",
+      TRUE ~ as.character(Exposure)  # fall-back in case of weird values
+    ),
+    Exposure = factor(Exposure, levels = c("Yes", "No", "Missing"))
+  )
+
+```
+
+
+
+
+```{r}
+# Media Exposure Visualization
+ggplot(media_vars_level, aes(x = Media, fill = Exposure)) +
+  geom_bar(position = "fill", width = 0.8) +  # Consistent bar width
+  labs(
+    title = "Media Exposure to Family Planning Messages",
+    x = "Media Source",
+    y = "Proportion of Women",
+    fill = "Exposure Status", # More descriptive legend title
+    caption = "Data Source: Tanzania Demographic and Health Survey"
+    # More descriptive legend title
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +  # Add percentage labels
+  theme_minimal(base_size = 12) +  # Base font size
+  theme(
+    axis.text.x = element_text(
+      angle = 45, 
+      hjust = 1,  # Better alignment for rotated labels
+      vjust = 1,
+      size = 10
+    ),
+    plot.title = element_text(
+      face = "bold",  # Bold title
+      hjust = 0.5,   # Center title
+      size = 14
+    ),
+    legend.position = "top",  # Legend on top
+    panel.grid.major.x = element_blank()  # Remove vertical grid lines
+  ) +
+  scale_fill_brewer(palette = "Set2")  # Color-blind friendly palette
+```
+
+
+
+The descriptive analysis of media exposure to FP messages among women in Tanzania highlights significant variations across different communication channels. Radio emerged as the most effective medium, with a higher number of women reporting “Yes” to having heard about FP messages on the radio compared to those who had not. 
+
+In contrast, SMS-based communication showed the weakest reach, with a much higher number of women indicating they had not received FP messages via SMS. Exposure through television showed some improvement, with the number of women responding “Yes” increasing slightly, but the majority still reported not hearing FP messages on TV. A similar trend was observed for newspapers and magazines, where “No” responses remained dominant.
+
+
+
+
+
+
+## We now examine the role of health facility contact in promoting knowledge of family planning methods.
+
+```{r}
+facility_vars <- c("visited_by_fieldworkers_last_12_months",
+                   "did_fieldworker_talk_about_fp",
+                   "visited_by_health_facility_last_12_months",
+                   "told_about_fp_at_health_facility")
+
+Table_visited <- tb_clean1 %>%
+  select(all_of(facility_vars)) %>%
+  summarise(across(everything(), ~mean(.x == "yes", na.rm = TRUE) * 100)) %>%
+  pivot_longer(cols = everything(),
+               names_to = "facility_variable",
+               values_to = "percent_yes")
+gt::gt(Table_visited)
+```
+
+
+
+```{r}
+tb_clean1 %>%
+  pivot_longer(
+    cols = all_of(facility_vars),
+    names_to = "contact", 
+    values_to = "yesno"
+  ) %>%
+  filter(yesno == "yes") %>%
+  count(contact) %>%
+  ggplot(aes(x = fct_reorder(contact, n), y = n)) +
+  geom_col(
+    fill = "steelblue",      # Single consistent color
+    width = 0.7             # Slightly narrower bars
+  ) +
+  coord_flip() +
+  labs(
+    title = "Health Facility Contact About FP",
+    x = "Facility Contact Type", 
+    y = "Number of Women",
+    caption = "Data Source: Tanzania Demographic and Health Survey"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5),  # Centered title
+    panel.grid.major.y = element_blank(),  # Remove horizontal grid lines
+    axis.text.y = element_text(size = 10)  # Slightly larger y-axis text
+  ) +
+  scale_y_continuous(expand = c(0, 0))    # Remove extra space below 0
+
+```
+
+The analysis of health facility contact regarding family planning (FP) reveals that fieldworkers play a more prominent role in FP outreach than formal health facilities. A high number of women reported being visited by fieldworkers in the past 12 months, and many of these fieldworkers discussed FP during their visits. 
+In contrast, relatively few women reported visiting health facilities in the past 12 months or being told about FP during such visits. 
+
+
+
+## Relationship Between Media Channels and FP Awareness: A Cross-tab Analysis
+ 
+ 
+```{r}
+Table1 <- table(tb_clean1$heard_about_fp_on_radio, tb_clean1$source_known_any_method)
+
+# Percentage breakdown
+Given <- prop.table(table(tb_clean1$heard_about_fp_on_radio, tb_clean1$source_known_any_method), 1)* 100
+
+#addmargins(Table1)      # For frequency
+#addmargins(round(Given, 1))  # For percentages (rounded)
+
+
+```
+ 
+ 
+
+```{r}
+
+# Create consistent theme
+fp_theme <- theme_minimal() +
+  theme(plot.title = element_text(size = 11, hjust = 0.5, face = "bold"),
+        legend.position = "bottom")
+
+# Radio plot
+p1 <- ggplot(tb_clean1, aes(x = heard_about_fp_on_radio, fill = source_known_any_method)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Awareness by R Exposure",
+       x = "Heard on Radio",
+       y = "Percent",
+       fill = "Source of Known FPM") +
+  fp_theme
+
+# TV plot
+p2 <- ggplot(tb_clean1, aes(x = heard_about_fp_on_tv, fill = source_known_any_method)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Awareness by TV Exposure",
+       x = "Heard on TV",
+       y = NULL,  # Remove redundant y-axis label
+       fill = "Source of Known FPM") +
+  fp_theme
+
+# Newspaper plot
+p3 <- ggplot(tb_clean1, aes(x = heard_about_fp_on_newspaper_or_magazine, fill = source_known_any_method)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Awareness by Print Media",
+       x = "Heard on Print Media",
+       y = NULL,  # Remove redundant y-axis label
+       fill = "Source of Known FPM",
+       caption = "Data Source: Tanzania Demographic and Health Survey") +
+  fp_theme
+
+# Combine plots
+(p1 | p2 | p3) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
+```
+
+Each panel of the graph compares women who said “Yes” or “No” to having heard about FP through a specific media source (Radio, TV, or Newspaper).
+
+-   "Yes" = women who have been exposed to FP messages through that media (e.g., they heard FP on the radio).
+
+-   "No" = women who have not been exposed to FP through that media.
+
+Within each group, we look at where these women say they got FP information from (clinic, pharmacy, don’t know, etc.).
+
+The crosstab shows that across radio, television, and print media exposure, the majority of women reported "Don't know" as their source of FP information. This indicates a significant gap in message clarity and recall, even among those exposed to FP messages through media. While radio exposure slightly improves recognition of specific sources like government clinics/pharmacies, the overall improvement across all media types is minimal. Other sources such as private clinics, pharmacies, NGOs, or community delivery remain rarely cited, regardless of media exposure. These findings highlight the need to strengthen the effectiveness and memorability of FP messages, especially through media, to ensure women can recall both the content and source of the information.
+
+
+ 
+## To better understand the reach of FP messaging, we analyze how awareness sources differ by region, age, and education.
+ 
+
+
+```{r}
+data <- tb_clean1 %>%
+  mutate(across(c(region, age_in_5_year_groups, highest_educational_eevel,
+                  source_known_any_method), as.factor))
+
+```
+
+
+###  Variation in Family Planing Awareness Sources by region
+
+
+```{r}
+table_region <- data %>%
+  count(region, source_known_any_method) %>%
+  group_by(region) %>%
+  mutate(percent = 100 * n / sum(n))
+
+```
+
+
+```{r}
+
+# Create summary table
+table_region_summary <- tb_clean1 %>%
+  mutate(across(c(region, age_in_5_year_groups, highest_educational_eevel,
+                  source_known_any_method), as.factor)) %>%
+  count(region, name = "total_responses") %>%
+  mutate(percent = round(100 * total_responses / sum(total_responses), 1)) %>%
+  arrange(desc(total_responses))
+
+# Create a compact flextable
+flextable(table_region_summary) %>%
+  set_table_properties(width = .95, layout = "autofit") %>%
+  fontsize(size = 9, part = "all") %>%
+  autofit() %>%
+  align(align = "center", part = "all") %>%
+  theme_box()
+```
+
+
+
+```{r}
+plot_region <- data %>%
+  count(region, source_known_any_method) %>%
+  group_by(region) %>%
+  mutate(percent = 100 * n / sum(n)) %>%
+  plot_ly(
+    x = ~percent, 
+    y = ~fct_reorder(region, percent), 
+    color = ~source_known_any_method,
+    colors = c("#E69F00", "#56B4E9"),
+    type = 'bar', 
+    orientation = 'h',  
+    height = 100 + (length(unique(data$region)) * 20),  
+    width = 800,
+    text = ~paste0(round(percent, 1), "%"),
+    textposition = 'inside',
+    textfont = list(color = 'white', size = 10),
+    hoverinfo = 'text',
+    hovertext = ~paste(
+      "Region:", region,
+      "<br>FP Awareness:", source_known_any_method,
+      "<br>Percentage:", round(percent, 1), "%",
+      "<br>Count:", n
+    ),
+    marker = list(line = list(color = 'white', width = 0.5))
+  ) %>%
+  layout(
+     barmode = 'stack',
+    title = list(
+      text = "<b>Family Planning Awareness by Region</b>",
+      font = list(size = 18),
+      x = 0.5,        # Centers the title horizontally
+      xanchor = 'center',  # Anchors the title at its center
+      y = 0.98 # Adjusts vertical position (optional)
+    ),
+    xaxis = list(
+      title = "<b>Percentage (%)</b>",
+      ticksuffix = "%",
+      range = c(0, 100)
+    ),
+    yaxis = list(
+      title = "<b>Region</b>",
+      tickfont = list(size = 10),
+      automargin = TRUE,
+      categoryorder = "total ascending"
+    ),
+     legend = list(
+      title = list(text = "<b>Source of Known FPM</b>", font = list(size = 12)),
+      font = list(size = 11),  # Smaller legend text
+      orientation = 'h',
+      x = 0.5, 
+      xanchor = 'center',
+      y = -0.1,  # Move legend closer to plot
+      yanchor = 'top',
+      traceorder = "normal",
+      itemwidth = 30,  # Narrower legend items
+      itemsizing = "constant",
+      entrywidth = 20,  # Narrower entry boxes
+      entrywidthmode = "pixels"
+    ),
+    margin = list(l = 10, r = 10, b = 20, t = 50, pad = 10),
+    annotations = list(
+      list(
+        x = 0.5,
+        y = -0.3,
+        text = "Data Source: Tanzania Demographic and Health Survey",
+        showarrow = FALSE,
+        xref = "paper",
+        yref = "paper",
+        xanchor = "left",
+        yanchor = "down",
+        font = list(size = 10)
+      )
+    )
+  )
+plot_region
+```
+
+
+The chart highlights significant regional variation in how women across Tanzania recall the source of their family planning (FP) knowledge. In nearly every region, a substantial share of respondents answered “Don’t know”, pointing to widespread challenges in information retention or a lack of clarity regarding where they first learned about FP. Notably, the proportion of “Don’t know” responses differs considerably across regions.
+
+Regions such as Tabora (78.9%), Katavi (84.1%), Geita (89.2%), Simiyu (86.2%), Mjini Magharibi (91.4%), Kusini Pemba (95.1%), Kaskazini Unguja (91%), and Shinyanga (80.2%) exhibit particularly high levels of uncertainty. This suggests that women in these areas may be receiving less effective or less frequent FP messaging, or that the communication methods used are not sufficiently engaging or memorable.
+
+In contrast, regions like Ruvuma (55.1%), Pwani (66.4%), Kilimanjaro (65.9%), and Mtwara (52.6%) show better performance, with fewer women responding “Don’t know.” Notably, in Ruvuma, 31.1% of women specifically cited a government clinic or pharmacy as the source of their FP knowledge—indicating stronger linkages between FP education and health service delivery. These differences may reflect variations in local health infrastructure, the presence of outreach programs, or the effectiveness of community health workers in reinforcing key messages.
+
+Other sources such as private clinics, pharmacies, and community based settings (e.g., friends, religious institutions, or shops) appear sporadically across regions but contribute minimally to overall FP awareness.
+
+
+
+###  Sources of Family Planning Awareness by Age Group
+
+
+```{r}
+plot_age <- data %>%
+  count(age_in_5_year_groups, source_known_any_method) %>%
+  group_by(age_in_5_year_groups) %>%
+  mutate(percent = 100 * n / sum(n)) %>%
+  plot_ly(
+    x = ~age_in_5_year_groups, 
+    y = ~percent, 
+    color = ~source_known_any_method,
+    colors = c("#1f77b4", "#ff7f0e"),
+    type = "bar",
+    width = 850,
+    height = 500,
+    text = ~paste0(round(percent, 1), "%"),
+    textposition = "inside",   # 🔑 clearer than outside
+    textfont = list(size = 10, color = "white"),
+    hoverinfo = "text",
+    hovertext = ~paste(
+      "Age Group:", age_in_5_year_groups,
+      "<br>FP Awareness:", source_known_any_method,
+      "<br>Percentage:", round(percent, 1), "%",
+      "<br>Count:", n
+    ),
+    marker = list(
+      line = list(color = "white", width = 0.5),
+      opacity = 0.9
+    )
+  ) %>%
+  layout(
+    barmode = "group",
+    title = list(
+      text = "<b>Family Planning Awareness by Age Group</b>",
+      font = list(size = 16)
+    ),
+    xaxis = list(
+      title = "<b>Age Group (5-year intervals)</b>",
+      tickfont = list(size = 11),
+      categoryorder = "array",
+      categoryarray = ~age_in_5_year_groups
+    ),
+    yaxis = list(
+      title = "<b>Percentage (%)</b>",
+      ticksuffix = "%",
+      range = c(0, 100),
+      tickfont = list(size = 11)
+    ),
+    legend = list(
+      title = list(text = "<b>Source of Known FPM</b>"),
+      orientation = "h",
+      x = 0.5,
+      xanchor = "center",
+      y = -0.2
+    ),
+    margin = list(l = 60, r = 30, b = 90, t = 70),
+    height = 500,   # 🔑 control size
+    width  = 850,   # 🔑 control size
+    plot_bgcolor = "rgba(245,245,245,1)",
+    paper_bgcolor = "rgba(245,245,245,1)"
+  ) %>%
+  layout(
+    yaxis = list(showgrid = TRUE, gridcolor = "white"),
+    xaxis = list(showgrid = FALSE)
+  )
+
+plot_age
+
+```
+
+
+The chart illustrates that across all age groups, “Don’t know” is the most commonly reported response, indicating widespread uncertainty among women regarding the source of their family planning (FP) knowledge. While this trend is consistent, notable differences emerge across age groups in terms of source recall and information retention.
+
+-   Women in the **15–19 age group** exhibit the highest proportion of **“Don’t know”** responses, exceeding 90%, suggesting that adolescents are either less exposed to reliable FP messaging or less confident in identifying its source.
+
+-   As age increases particularly **between 25 and 44 years** there is a gradual improvement in source recall. Women in the **30–39 age** range show the highest awareness of specific sources, particularly government clinics and pharmacies, indicating stronger integration of FP messaging with health service use in this group.
+
+-   Among women aged 45 and above, the rate of **“Don’t know”** responses begins to rise again, which may reflect a decline in recent exposure or memory of FP campaigns and services.
+
+Other sources including pharmacies, private clinics, NGOs, and informal channels such as shops, churches, and friends—appear across age groups but contribute minimally to FP source recall.
+
+
+
+
+###  Family Planning Information Sources Stratified by Educational Attainment
+
+```{r}
+plot_edu <- data %>%
+  count(highest_educational_eevel, source_known_any_method) %>%
+  group_by(highest_educational_eevel) %>%
+  mutate(percent = 100 * n / sum(n)) %>%
+  plot_ly(
+    x = ~highest_educational_eevel, 
+    y = ~percent, 
+    color = ~source_known_any_method,
+    colors = c("#4E79A7", "#F28E2B"),
+    type = "bar",
+    width = 850,          # ✅ moved here
+    height = 500,         # ✅ moved here
+    text = ~paste0(round(percent, 1), "%"),
+    textposition = "inside",     # clearer than outside
+    textfont = list(size = 10, color = "white"),
+    hoverinfo = "text",
+    hovertext = ~paste0(
+      "Education: ", highest_educational_eevel,
+      "<br>FP Awareness: ", source_known_any_method,
+      "<br>Percentage: ", round(percent, 1), "%",
+      "<br>Count: ", n
+    ),
+    marker = list(
+      line = list(color = "white", width = 0.5),
+      opacity = 0.9
+    )
+  ) %>%
+  layout(
+    barmode = "group",
+    title = list(
+      text = "<b>Family Planning Awareness by Education Level</b>",
+      font = list(size = 16),
+      x = 0.5
+    ),
+    xaxis = list(
+      title = "<b>Highest Education Level</b>",
+      tickfont = list(size = 11),
+      categoryorder = "array",
+      categoryarray = ~highest_educational_eevel
+    ),
+    yaxis = list(
+      title = "<b>Percentage (%)</b>",
+      ticksuffix = "%",
+      range = c(0, 100),
+      tickfont = list(size = 11),
+      showgrid = TRUE,
+      gridcolor = "white"
+    ),
+    legend = list(
+      title = list(text = "<b>Source of Known FPM</b>"),
+      orientation = "h",
+      x = 0.5,
+      xanchor = "center",
+      y = -0.2
+    ),
+    margin = list(l = 60, r = 30, b = 90, t = 70),
+    plot_bgcolor = "rgba(245,245,245,1)",
+    paper_bgcolor = "rgba(245,245245,1)"
+  )
+
+plot_edu
+
+```
+
+
+The results reveal that across all levels of education, the dominant response is "Don't know", indicating that many women, regardless of their educational attainment, struggle to identify where they received FP information. This suggests a general lack of clarity or recall concerning the source of FP knowledge.
+
+Women with primary and secondary education show slightly higher awareness of formal sources such as government clinics/pharmacies compared to those with no education, where recognition of any specific FP source is very low. This indicates that education does play a role in improving awareness but may not be sufficient to ensure clear source identification.
+
+Interestingly, informal sources like shops, churches, and friends are reported more often than NGOs or community delivery across most education levels, though this too declines with lower educational attainment. Respondents with no education showed minimal mention of any FP source, reflecting their limited access to or understanding of available FP services.
+
+
+
+# Discussion 
+
+This analysis highlights the key role of **media exposure** and **health facility contact** in shaping family planning (FP) awareness among Tanzanian women. **Radio** emerged as the most influential source, especially among **rural and less-educated women**, due to its wide accessibility and low barriers to use.
+
+While **television** and **newspapers** were cited less frequently, they still contributed to awareness, particularly among **urban** and **educated** groups. These differences suggest the need to tailor FP communication strategies based on media access and literacy levels.
+
+**SMS-based communication,** though less common, showed promise. Women who received FP messages via SMS had higher awareness, pointing to the potential of **mobile health (mHealth)** to complement traditional outreach especially among **younger, urban women.**
+
+**Health facility contact** also proved important. Women who had visited clinics in the past year were more likely to cite **health workers** as a source of FP information. This supports the need to integrate FP counseling into routine care to strengthen informed decision-making.
+
+However, **gaps persist.** Many women especially **adolescents** and those in **rural areas** reported **“Don’t know”** when asked about their source of FP knowledge. This suggests either low exposure or weak message retention. More **inclusive, targeted, and memorable strategies** are needed to reach these groups effectively.
+
+In summary, while various channels contribute to FP awareness, **radio and health workers** remain the most impactful. Efforts should focus on strengthening these channels while expanding **mHealth solutions** and addressing disparities in source recall.
+
+
+# Recommendations
+
+-   Improve message clarity: FP messages should clearly identify the source (clinic, worker, media) and repeat it consistently.
+
+-   Strengthen training for fieldworkers and health staff to ensure FP education is part of every visit.
+
+-   Leverage radio more strategically, especially in rural areas and among younger women.
+
+-   Target youth and uneducated women with simplified and memorable FP communication strategies.
+
+-   Encourage community-level engagement (churches, schools, markets) to reinforce messages from multiple sources.
+
+
+# Conclusion
+
+This project goes beyond measuring family planning (FP) awareness among Tanzanian women by exploring the **sources** through which that awareness is acquired. The findings emphasize the significant influence of **mass media particularly radio and direct engagement with health professionals** in shaping women's knowledge of FP methods.
+
+To enhance the effectiveness of public health communication, strategies should continue to **prioritize these proven channels** while also expanding the use of **mobile health (mHealth)** platforms. Ensuring that health facilities consistently serve as hubs for FP education will further strengthen outreach efforts.
+
+Importantly, closing the remaining gaps in awareness especially among **adolescents, rural women,** and those with **limited education** requires tailored, inclusive communication approaches. Leveraging both traditional and digital platforms, rooted in community trust and cultural relevance, will be essential to **achieving equitable access to FP information and services** across all population groups.
+
+
+
+
+
