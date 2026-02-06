@@ -14,14 +14,13 @@ website:
       - text: "CV"
         file: cv.qmd
     right:
-      - about.qmd
       - icon: github
-        href: https://github.com/
-      - icon: twitter
-        href: https://twitter.com
+        href: https://github.com/DaNI-26-W
+      - icon: linkedin
+        href: https://www.linkedin.com/in/Daniel-Nyakwela
 format:
   html:
     theme: cosmo
     css: styles.css
-
+    include-after-body: _footer.qmd
 
