@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Daniel Kadoke – Daniel Nyakwela | Research &amp; Analysis</title>
+<title>documents – Daniel Nyakwela | Research &amp; Analysis</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -33,6 +33,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
@@ -70,7 +71,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -88,7 +89,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -100,7 +101,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">CV</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./Documents.html"> 
+    <a class="nav-link active" href="./Documents.html" aria-current="page"> 
 <span class="menu-text">Documents</span></a>
   </li>  
 </ul>
@@ -126,24 +127,33 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#decision-tree-analysis" id="toc-decision-tree-analysis" class="nav-link active" data-scroll-target="#decision-tree-analysis">Decision Tree Analysis</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
-<div class="quarto-about-jolla">
-  <img src="Dani.jpeg" class="about-image
-  round " style="height: 15em; width: 15em;">
- <header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Daniel Kadoke</h1>
-</div>
-<div class="quarto-title-meta">
-  </div>
-</header><main class="content" id="quarto-document-content">
-<p>I am Daniel Kadoke, a biostatistician with a strong passion for data-driven research and evidence-based decision making. I work extensively with R and Stata to analyze, model, and interpret complex health and biological data. I am highly hardworking, detail-oriented, and committed to delivering accurate, reliable, and impactful results. I enjoy turning data into clear insights that support research, policy, and real-world solutions.</p>
+<main class="content" id="quarto-document-content">
 
 
-</main>  
-</div>
- <!-- /main -->
+
+
+<section id="decision-tree-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="decision-tree-analysis">Decision Tree Analysis</h2>
+<p>This document provides a comprehensive and practical introduction to decision tree analysis. It covers the fundamental <strong>aim of decision trees</strong>, explains the underlying <strong>principles</strong> that govern their construction and interpretation, and discusses the <strong>types of data formats</strong> suitable for this method. In addition, the document highlights the <strong>R packages</strong> commonly used for implementing decision tree models and demonstrates their real world applications, with a particular focus on classification and prediction tasks related to loan eligibility.</p>
+<p>This work was conducted as a group project involving four contributors, with the primary objective of building a solid understanding of decision tree analysis through both theoretical explanation and hands on application.</p>
+<iframe src="Documents/DecisionT.pdf" width="100%" height="900px" style="border:1px solid #ddd;">
+</iframe>
+<p><a href="Documents/DecisionT.pdf">⬇ Download PDF</a></p>
+
+
+</section>
+
+</main> <!-- /main -->
 
 
 <div style="text-align:center; font-size:0.85rem; color:#6b7280; padding:10px 0;">
@@ -179,6 +189,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
   const isCodeAnnotation = (el) => {
     for (const clz of el.classList) {
       if (clz.startsWith('code-annotation-')) {                     

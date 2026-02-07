@@ -13,6 +13,8 @@ website:
         file: portifolio.qmd
       - text: "CV"
         file: cv.qmd
+      - text: "Documents"
+        file: Documents.qmd
     right:
       - icon: github
         href: https://github.com/DaNI-26-W

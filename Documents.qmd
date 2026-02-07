@@ -1,0 +1,15 @@
+
+## Decision Tree Analysis
+
+This document provides a comprehensive and practical introduction to decision tree analysis. It covers the fundamental **aim of decision trees**, explains the underlying **principles** that govern their construction and interpretation, and discusses the **types of data formats** suitable for this method. In addition, the document highlights the **R packages** commonly used for implementing decision tree models and demonstrates their real world applications, with a particular focus on classification and prediction tasks related to loan eligibility.
+
+This work was conducted as a group project involving four contributors, with the primary objective of building a solid understanding of decision tree analysis through both theoretical explanation and hands on application.
+
+<iframe 
+  src="Documents/DecisionT.pdf"
+  width="100%"
+  height="900px"
+  style="border:1px solid #ddd;">
+</iframe>
+
+[⬇ Download PDF](Documents/DecisionT.pdf)
