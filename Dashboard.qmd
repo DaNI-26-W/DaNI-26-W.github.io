@@ -7,7 +7,7 @@ format:
     theme:
       - flatly
     nav-buttons:
-      - text: "Life Expectancy & GDP per Capita | Gapminder"
+      - text: "Life Expectancy & GDP per Capita"
         href: "#"
     mainfont: "DM Sans"
     include-in-header:
@@ -16,7 +16,7 @@ format:
         <style>
           h1, h2, h3, .navbar-brand { font-family: 'Fraunces', serif !important; }
           body, .card-body, .value-box { font-family: 'DM Sans', sans-serif !important; }
-          .navbar { background-color: #1d3461 !important; }
+          .navbar { background-color: #007BFF !important; }
           .navbar-brand, .navbar-nav .nav-link { color: #ffffff !important; }
         </style>
 execute:
@@ -29,7 +29,7 @@ execute:
 #| include: false
 # Load packages
 if (!require(pacman)) install.packages("pacman")
-pacman::p_load(ggplot2, knitr, tidyr, plotly, janitor, DT, reactable, flexdashboard, gapminder, dplyr, scales, leaflet, sf, rnaturalearth, rnaturalearthdata, bslib, bsicons)
+pacman::p_load(ggplot2, knitr, tidyr, plotly, janitor, DT, reactable, flexdashboard, gapminder, dplyr, scales, leaflet, sf, rnaturalearth, rnaturalearthdata, bslib, bsicons, htmltools)
 
 
 # ── colour palette 
@@ -88,12 +88,13 @@ outliers <- gap_2007 %>%
                          "Equatorial Guinea","Japan","Botswana")) %>%
   select(country, region, gdpPercap, lifeExp) %>%
   mutate(Story = case_when(
-    country == "Cuba"              ~ "High life exp despite modest GDP — universal healthcare",
+    country == "Cuba"              ~ "High life exp despite modest GDP universal healthcare",
     country == "Kuwait"            ~ "Oil wealth; good outcomes but modest relative to income",
     country == "Gabon"             ~ "Oil wealth not translating to population health",
     country == "Sri Lanka"         ~ "Strong public health investment despite low income",
     country == "Equatorial Guinea" ~ "Oil boom: very high GDP but poor health outcomes",
-    country == "Japan"             ~ "Highest life exp — diet, healthcare & social cohesion",
+    country == "Japan"             ~ "Highest life exp-
+    diet, healthcare & social cohesion",
     country == "Botswana"          ~ "HIV/AIDS epidemic depressed life exp despite growth"
   ))
 ```
@@ -295,7 +296,7 @@ leaflet(world_joined, options = leafletOptions(minZoom = 1)) %>%
 
 ### Country Ranking Table — Life Expectancy (2007) 
 
-```{r}
+```{r title = "Country Ranking Table: Life Expectancy (2007)"}
 rank_table <- gap_2007 %>%
   arrange(desc(lifeExp)) %>%
   mutate(
@@ -387,7 +388,7 @@ bslib::value_box(
 
 ### GDP per Capita Trends by Region (1952–2007) {width="650"}
 
-```{r}
+```{r title = "GDP per Capita Trends by Region (1952–2007)"}
 #| fig-height: 5
 p5 <- region_year %>%
   ggplot(aes(x = year, y = avg_gdpPercap, color = region,
@@ -413,7 +414,7 @@ ggplotly(p5, tooltip = "text") %>%
 
 ### GDP per Capita by Region — 2007 {width="350"}
 
-```{r}
+```{r title = "GDP per Capita by Region (2007)"}
 #| fig-height: 5
 p6 <- region_2007 %>%
   mutate(region = reorder(region, avg_gdpPercap)) %>%
@@ -439,7 +440,7 @@ ggplotly(p6, tooltip = "text")
 
 ### Distribution of Countries by Income Bracket (2007) {width="500"}
 
-```{r}
+```{r title = "Distribution of Countries by Income Bracket (2007)"}
 #| fig-height: 5
 gap_2007_hist <- gap_2007 %>%
   mutate(income_bracket = cut(
@@ -471,7 +472,7 @@ ggplotly(p7, tooltip = "text") %>%
 
 ### Top 15 Countries — GDP per Capita (2007) {width="500"}
 
-```{r}
+```{r title = "Top 15 Countries — GDP per Capita (2007)"}
 #| fig-height: 5
 top15_gdp <- gap_2007 %>%
   slice_max(gdpPercap, n = 15) %>%
@@ -498,7 +499,7 @@ ggplotly(p8, tooltip = "text")
 
 ### GDP Growth: 1952 → 2007 for Major Economies
 
-```{r}
+```{r title = "GDP Growth: 1952 - 2007 for Major Economies"}
 #| fig-height: 5
 growth_long <- growth %>%
   pivot_longer(cols = c(yr_1952, yr_2007),
@@ -515,7 +516,7 @@ p9 <- growth_long %>%
   scale_fill_manual(values = c("1952" = "#9fb8d8", "2007" = "#1d3461"), name = NULL) +
   scale_y_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
   labs(x = NULL, y = "GDP per Capita (USD)",
-       title = "GDP per capita growth — 1952 vs 2007, major economies") +
+       title = "GDP per capita growth 1952 vs 2007, major economies") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "top",
         plot.title = element_text(size = 13, face = "bold"),
@@ -578,7 +579,7 @@ bslib::value_box(
 
 ### GDP per Capita vs Life Expectancy — Bubble Chart (2007)
 
-```{r}
+```{r title = "GDP per Capita vs Life Expectancy: Bubble Chart (2007)"}
 #| fig-height: 6
 gap_2007_bubble <- gap_2007 %>%
   mutate(
@@ -621,7 +622,7 @@ ggplotly(p10, tooltip = "text") %>%
 
 ### Regional Averages Comparison (2007) {width="500"}
 
-```{r}
+```{r title = "Regional Averages Comparison (2007)"}
 #| fig-height: 5
 region_indexed <- region_2007 %>%
   mutate(
@@ -648,7 +649,7 @@ p11 <- region_indexed %>%
   ), name = NULL) +
   scale_y_continuous(labels = percent_format()) +
   labs(x = NULL, y = "Indexed Value (% of max)",
-       title = "Both indicators by region — indexed to max") +
+       title = "Both indicators by region-indexed to max") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "top",
         plot.title = element_text(size = 13, face = "bold"),
@@ -660,7 +661,7 @@ ggplotly(p11, tooltip = "text") %>%
 
 ### Correlated Trajectory Over Time (1952–2007) {width="500"}
 
-```{r}
+```{r title = "Correlated Trajectory Over Time (1952–2007)"}
 #| fig-height: 5
 p12 <- region_year %>%
   ggplot(aes(x = avg_gdpPercap, y = avg_lifeExp,
@@ -677,7 +678,7 @@ p12 <- region_year %>%
   scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
   labs(x = "GDP per Capita (USD 000s)",
        y = "Life Expectancy (years)",
-       title = "Trajectory: wealth vs. health (1952→2007)") +
+       title = "Trajectory: wealth vs. health (1952-2007)") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom",
         plot.title = element_text(size = 13, face = "bold"),
@@ -718,3 +719,404 @@ DT::datatable(
     fontWeight = "bold"
   )
 ```
+
+
+
+# Data {data-icon="fa-table"}
+
+## Row {height="60px"}
+
+### {.no-title}
+
+```{r}
+htmltools::div(
+  style = "padding: 6px 2px 0;",
+  htmltools::h4(
+    "Full Gapminder Dataset",
+    style = "font-family:'Fraunces',serif; font-weight:500; margin:0 0 2px;"
+  ),
+  htmltools::p(
+    "All 1,704 country-year observations from the gapminder package (1952–2007). 
+     Use the search and filter controls to explore, then download the full or 
+     filtered dataset as a CSV.",
+    style = "font-size:13px; color:#6b6760; margin:0;"
+  )
+)
+```
+
+
+## Row {height="680px"}
+
+### Full Dataset {.no-title}
+
+```{r}
+htmltools::browsable(
+htmltools::tagList(
+
+    reactable(
+      gapminder %>%
+        rename(
+          Country   = country,
+          Region    = continent,
+          Year      = year,
+          `Life Exp (yrs)` = lifeExp,
+          Population       = pop,
+          `GDP/cap ($)`    = gdpPercap
+        ) %>%
+        mutate(
+          `GDP/cap ($)` = round(`GDP/cap ($)`, 2),
+          `Life Exp (yrs)` = round(`Life Exp (yrs)`, 2)
+        ),
+      elementId           = "gapminder-table",
+      searchable          = TRUE,
+      filterable          = TRUE,
+      striped             = TRUE,
+      highlight           = TRUE,
+      bordered            = TRUE,
+      defaultPageSize     = 15,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions     = c(10, 25, 50, 100),
+      defaultSorted       = list(Year = "desc", `Life Exp (yrs)` = "desc"),
+      theme = reactableTheme(
+        headerStyle      = list(background = "#1d3461", color = "#ffffff",
+                                fontWeight = 500, fontSize = 12),
+        stripedColor     = "#f5f3ee",
+        highlightColor   = "#eaf5ee",
+        borderColor      = "rgba(0,0,0,0.07)",
+        style            = list(fontFamily = "'DM Sans', sans-serif", fontSize = 13)
+      ),
+      columns = list(
+        Region = colDef(
+          maxWidth = 110,
+          cell = function(value) {
+            colors <- c(Africa="#2d6a4f", Americas="#1d3461", Asia="#c94f2a",
+                        Europe="#7b4f9e", Oceania="#c77d1a")
+            col <- colors[[as.character(value)]]
+            htmltools::span(
+              value,
+              style = paste0(
+                "background:", col, ";color:#fff;padding:2px 9px;",
+                "border-radius:10px;font-size:11px;font-weight:500;"
+              )
+            )
+          }
+        ),
+        Year = colDef(maxWidth = 70, align = "center"),
+        Population = colDef(
+          align  = "right",
+          format = colFormat(separators = TRUE, digits = 0)
+        ),
+        `GDP/cap ($)` = colDef(
+          align  = "right",
+          format = colFormat(currency = "USD", separators = TRUE, digits = 2)
+        ),
+        `Life Exp (yrs)` = colDef(
+          align    = "center",
+          maxWidth = 130,
+          cell = function(value) {
+            bar_w <- round((value - 20) / 65 * 100)
+            htmltools::div(
+              style = "display:flex;align-items:center;gap:6px;",
+              htmltools::div(
+                style = paste0(
+                  "width:", bar_w, "px;max-width:90px;height:7px;",
+                  "border-radius:4px;background:#2d6a4f;"
+                )
+              ),
+              htmltools::span(value)
+            )
+          }
+        )
+      )
+    ),
+
+    tags$br(),
+
+    tags$div(
+      style = "display:flex;gap:12px;flex-wrap:wrap;",
+
+      tags$button(
+        "\u2b07 Download full dataset as CSV",
+        onclick = "Reactable.downloadDataCSV('gapminder-table', 'gapminder_full.csv')",
+        style = paste0(
+          "background-color:#1d3461;color:white;border:none;",
+          "padding:9px 20px;border-radius:6px;cursor:pointer;",
+          "font-size:14px;font-family:'DM Sans',sans-serif;"
+        )
+      ),
+
+      tags$button(
+        "\u2b07 Download filtered rows as CSV",
+        onclick = "Reactable.downloadDataCSV('gapminder-table', 'gapminder_filtered.csv', {filtered: true})",
+        style = paste0(
+          "background-color:#2d6a4f;color:white;border:none;",
+          "padding:9px 20px;border-radius:6px;cursor:pointer;",
+          "font-size:14px;font-family:'DM Sans',sans-serif;"
+        )
+      )
+    )
+
+  )
+)
+```
+
+# Discussion {data-icon="fa-comments"}
+
+## Row {height="auto"}
+
+### Overview & Objectives {width="500"}
+
+```{r}
+htmltools::div(
+  style = "font-family:'DM Sans',sans-serif; line-height:1.75; font-size:14px; color:#1a1814;",
+
+  htmltools::h4("What This Dashboard Explores",
+    style = "font-family:'Fraunces',serif; font-weight:500; color:#1d3461; margin-bottom:10px;"),
+
+  htmltools::p(
+    "This dashboard analyses two core development indicators from the ", 
+    htmltools::strong("Gapminder dataset"), " — ", 
+    htmltools::em("life expectancy at birth"), " and ", 
+    htmltools::em("GDP per capita (PPP-adjusted USD)"), 
+    " — across 142 countries and 12 time periods spanning 1952 to 2007."
+  ),
+  htmltools::br(),
+  htmltools::p(
+    "The Gapminder data, popularised by Hans Rosling, captures the broad sweep of global 
+     development over the second half of the twentieth century. By examining these two 
+     indicators together, we can ask a deceptively simple question: ", 
+    htmltools::em("does national wealth translate into longer lives?"), 
+    " The short answer is yes — but with important nuances."
+  ),
+  htmltools::br(),
+  htmltools::h4("Data Preparation",
+    style = "font-family:'Fraunces',serif; font-weight:500; color:#1d3461; margin-bottom:10px;"),
+  htmltools::p(
+    "The ", htmltools::code("gapminder"), " R package provides a pre-cleaned, tidy dataset 
+     requiring minimal manipulation. Key ", htmltools::code("dplyr"), " operations applied include:"
+  ),
+  htmltools::tags$ul(
+    style = "padding-left:20px; margin-top:6px;",
+    htmltools::tags$li(htmltools::code("filter()"), " — isolating single years (e.g. 2007, 1952) for cross-sectional analysis"),
+    htmltools::tags$li(htmltools::code("group_by() + summarise()"), " — computing population-weighted regional averages per year"),
+    htmltools::tags$li(htmltools::code("weighted.mean()"), " — ensuring large-population countries (China, India) do not bias simple averages"),
+    htmltools::tags$li(htmltools::code("mutate()"), " — deriving new variables such as total GDP (pop × gdpPercap) and income brackets"),
+    htmltools::tags$li(htmltools::code("pivot_longer() / pivot_wider()"), " — reshaping for grouped bar charts and growth comparisons"),
+    htmltools::tags$li(htmltools::code("left_join()"), " — merging Gapminder records onto world sf geometry for choropleth mapping"),
+    htmltools::tags$li(htmltools::code("slice_max() / slice_min()"), " — extracting top and bottom country rankings"),
+    htmltools::tags$li(htmltools::code("reorder()"), " — sorting factor levels for ranked bar charts")
+  )
+)
+```
+
+### Key Findings — Life Expectancy {width="500"}
+
+```{r}
+htmltools::div(
+  style = "font-family:'DM Sans',sans-serif; line-height:1.75; font-size:14px; color:#1a1814;",
+
+  htmltools::h4("Life Expectancy: A World Transformed",
+    style = "font-family:'Fraunces',serif; font-weight:500; color:#2d6a4f; margin-bottom:10px;"),
+
+  htmltools::p(
+    "Global average life expectancy rose from approximately ", htmltools::strong("49.9 years in 1952"),
+    " to ", htmltools::strong("67.0 years in 2007"), " — a gain of over 17 years in just 55 years. 
+     This is one of the most remarkable achievements in human history, driven by the 
+     spread of vaccines, antibiotics, clean water infrastructure, and maternal health programmes."
+  ),
+  htmltools::br(),
+
+  htmltools::div(
+    style = "background:#eaf5ee;border-left:4px solid #2d6a4f;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Asia's leap: "),
+    "Asia recorded the sharpest regional improvement — from ~46 years in 1952 to ~71 years 
+     by 2007. This reflects transformative public health investments in China, the post-war 
+     reconstruction of Japan and South Korea, and India's gradual health system expansion."
+  ),
+
+  htmltools::div(
+    style = "background:#fdf1ea;border-left:4px solid #c94f2a;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Africa's stall: "),
+    "Despite consistent improvement through the 1980s, Sub-Saharan Africa's life expectancy 
+     plateaued and partially reversed through the 1990s and early 2000s, largely due to the 
+     HIV/AIDS epidemic. Countries like Botswana, Swaziland, and Zimbabwe saw life expectancy 
+     fall back below 1970 levels."
+  ),
+
+  htmltools::div(
+    style = "background:#eef4fb;border-left:4px solid #1d3461;padding:12px 16px;border-radius:6px;",
+    htmltools::strong("The North-South divide: "),
+    "The world map reveals a persistent geographic pattern — Europe and East Asia cluster 
+     above 75 years while most of Sub-Saharan Africa remains below 55 years, pointing to 
+     deep structural inequalities in healthcare access, nutrition, and governance."
+  )
+)
+```
+
+## Row {height="auto"}
+
+### Key Findings — GDP per Capita {width="500"}
+
+```{r}
+htmltools::div(
+  style = "font-family:'DM Sans',sans-serif; line-height:1.75; font-size:14px; color:#1a1814;",
+
+  htmltools::h4("GDP per Capita: Growth With Widening Gaps",
+    style = "font-family:'Fraunces',serif; font-weight:500; color:#c77d1a; margin-bottom:10px;"),
+
+  htmltools::p(
+    "GDP per capita grew across all regions between 1952 and 2007, but at dramatically 
+     different speeds. Europe and Oceania saw steady compound growth, while Asia's trajectory 
+     accelerated sharply after 1980 — driven by the ", htmltools::em("East Asian economic miracle"),
+    " in Japan, South Korea, Taiwan, and Singapore, and later by China's rapid industrialisation."
+  ),
+  htmltools::br(),
+
+  htmltools::div(
+    style = "background:#faeeda;border-left:4px solid #c77d1a;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Extreme inequality: "),
+    "By 2007, Norway's GDP per capita (~$49,000) was approximately ", 
+    htmltools::strong("178 times"), " that of the Democratic Republic of Congo (~$277). 
+     This ratio illustrates how global economic growth has been deeply uneven — 
+     and how geography, institutions, and natural resources shape development outcomes."
+  ),
+
+  htmltools::div(
+    style = "background:#eaf5ee;border-left:4px solid #2d6a4f;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("The income distribution: "),
+    "The histogram of countries by income bracket reveals a bimodal pattern — a cluster 
+     of low-income countries (mostly African) and a cluster of high-income countries 
+     (Europe, Americas, Oceania), with a thinner middle. This 'missing middle' reflects 
+     persistent structural traps that prevent low-income economies from graduating."
+  ),
+
+  htmltools::div(
+    style = "background:#fdf1ea;border-left:4px solid #c94f2a;padding:12px 16px;border-radius:6px;",
+    htmltools::strong("The oil exception: "),
+    "Gulf states like Kuwait and Equatorial Guinea show that hydrocarbon wealth can 
+     generate very high GDP per capita without equivalent broad-based development — 
+     pointing to the well-documented 'resource curse' and its implications for 
+     health and human capital investment."
+  )
+)
+```
+
+### Key Findings — The Relationship {width="500"}
+
+```{r}
+htmltools::div(
+  style = "font-family:'DM Sans',sans-serif; line-height:1.75; font-size:14px; color:#1a1814;",
+
+  htmltools::h4("Wealth and Health: A Logarithmic Story",
+    style = "font-family:'Fraunces',serif; font-weight:500; color:#7b4f9e; margin-bottom:10px;"),
+
+  htmltools::p(
+    "The bubble chart on the Relationship page tells the central story of this dashboard: 
+     richer countries, on average, enjoy longer lives. But the relationship is not linear 
+     — it follows a ", htmltools::strong("logarithmic curve"), ". Doubling GDP per capita 
+     from $500 to $1,000 is associated with a much larger gain in life expectancy than 
+     doubling from $25,000 to $50,000."
+  ),
+  htmltools::br(),
+
+  htmltools::div(
+    style = "background:#eeedfe;border-left:4px solid #7b4f9e;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Diminishing returns: "),
+    "This diminishing-returns pattern suggests that at very low income levels, even modest 
+     increases in national wealth — enough to fund basic healthcare, sanitation, and 
+     nutrition — deliver dramatic health gains. Above roughly $15,000 per capita, 
+     additional wealth produces progressively smaller life expectancy improvements."
+  ),
+
+  htmltools::div(
+    style = "background:#eaf5ee;border-left:4px solid #2d6a4f;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Notable overperformers: "),
+    "Cuba and Sri Lanka stand out as countries that achieve life expectancies well above 
+     what their GDP would predict — demonstrating that deliberate policy choices around 
+     universal healthcare and education can partially decouple health from wealth."
+  ),
+
+  htmltools::div(
+    style = "background:#fdf1ea;border-left:4px solid #c94f2a;padding:12px 16px;border-radius:6px;margin-bottom:12px;",
+    htmltools::strong("Notable underperformers: "),
+    "Botswana, Gabon, and Equatorial Guinea all have GDP per capita figures that would 
+     predict much higher life expectancies than observed — highlighting how resource 
+     extraction economies, disease burden (HIV/AIDS), and governance failures can 
+     break the wealth-health link."
+  ),
+
+  htmltools::div(
+    style = "background:#eef4fb;border-left:4px solid #1d3461;padding:12px 16px;border-radius:6px;",
+    htmltools::strong("The trajectory over time: "),
+    "The correlated trajectory chart shows that all regions moved toward both higher GDP 
+     and higher life expectancy between 1952 and 2007 — but along very different paths 
+     and at very different speeds, reinforcing that economic growth alone does not 
+     guarantee human development. The data gives strong empirical support to the 
+     view that both ", htmltools::em("economic growth"), " and ", 
+    htmltools::em("targeted health investment"), " are necessary for sustained improvement."
+  )
+)
+```
+
+## Row {height="auto"}
+
+### Conclusions & Limitations {.no-title}
+
+```{r}
+htmltools::div(
+  style = paste0(
+    "font-family:'DM Sans',sans-serif;line-height:1.75;font-size:14px;",
+    "color:#1a1814;background:#f5f3ee;border-radius:10px;padding:20px 24px;"
+  ),
+
+  htmltools::h4("Conclusions",
+    style = "font-family:'Fraunces',serif;font-weight:500;color:#1d3461;margin-bottom:10px;"),
+
+  htmltools::p(
+    "This dashboard demonstrates three broad conclusions. First, the world has made 
+     extraordinary progress on life expectancy since 1952, driven by public health advances 
+     rather than wealth alone. Second, GDP per capita has grown substantially but unequally, 
+     with the gap between the richest and poorest countries widening in absolute terms even 
+     as it has narrowed in relative terms in some regions. Third, wealth and health are 
+     positively correlated in a logarithmic pattern, but the relationship has important 
+     exceptions — both overperformers (Cuba, Sri Lanka) and underperformers (Gulf oil states, 
+     HIV-affected Southern African nations) — reminding us that policy choices, disease 
+     burden, and governance shape outcomes as much as income does."
+  ),
+
+  htmltools::br(),
+
+  htmltools::h4("Limitations",
+    style = "font-family:'Fraunces',serif;font-weight:500;color:#c94f2a;margin-bottom:10px;"),
+
+  htmltools::tags$ul(
+    style = "padding-left:20px;",
+    htmltools::tags$li(
+      htmltools::strong("Coverage gaps: "),
+      "The Gapminder package covers 142 countries — many small island states, 
+       conflict zones, and microstates are absent, which may skew regional averages."
+    ),
+    htmltools::tags$li(
+      htmltools::strong("Temporal resolution: "),
+      "Data is provided in 5-year intervals, smoothing over year-to-year shocks such 
+       as famines, epidemics, and financial crises."
+    ),
+    htmltools::tags$li(
+      htmltools::strong("No causal claims: "),
+      "All relationships shown are descriptive and correlational. The dashboard does not 
+       establish that higher GDP causes longer lives, or vice versa — both may be driven 
+       by common underlying factors (institutions, education, geography)."
+    ),
+    htmltools::tags$li(
+      htmltools::strong("Static endpoint: "),
+      "The dataset ends in 2007. Significant events since then — the 2008 financial 
+       crisis, the COVID-19 pandemic, and advances in global health — are not reflected."
+    )
+  )
+)
+```
+
+
+
+
+
