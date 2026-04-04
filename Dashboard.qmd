@@ -1,236 +1,720 @@
 ---
-title: "GAPMINDER| LIFE EXPECTANCIES 2007"
-format: dashboard
-theme: materia
-author: Kadoke
+title: "Gapminder World Dashboard"
+format:
+  dashboard:
+    orientation: rows
+    scrolling: true
+    theme:
+      - flatly
+    nav-buttons:
+      - text: "Life Expectancy & GDP per Capita | Gapminder"
+        href: "#"
+    mainfont: "DM Sans"
+    include-in-header:
+      text: |
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:wght@300;400;500&display=swap" rel="stylesheet">
+        <style>
+          h1, h2, h3, .navbar-brand { font-family: 'Fraunces', serif !important; }
+          body, .card-body, .value-box { font-family: 'DM Sans', sans-serif !important; }
+          .navbar { background-color: #1d3461 !important; }
+          .navbar-brand, .navbar-nav .nav-link { color: #ffffff !important; }
+        </style>
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
-```{r}
-#load package
-if(!require(pacman)) install.packages("pacman")
-pacman::p_load(tidyverse,
-               plotly,
-               reactable,
-               bslib,
-               bsicons,
-               shiny,
-               gapminder,
-               rnaturalearth,
-               sf,
-               countrycode,
-               htmltools)
+```{r setup}
+#| include: false
+# Load packages
+if (!require(pacman)) install.packages("pacman")
+pacman::p_load(ggplot2, knitr, tidyr, plotly, janitor, DT, reactable, flexdashboard, gapminder, dplyr, scales, leaflet, sf, rnaturalearth, rnaturalearthdata, bslib, bsicons)
+
+
+# ── colour palette 
+region_colors <- c(
+  Africa   = "#2d6a4f",
+  Americas = "#1d3461",
+  Asia     = "#c94f2a",
+  Europe   = "#7b4f9e",
+  Oceania  = "#c77d1a"
+)
+
+# ── data preparation 
+gap <- gapminder::gapminder %>%
+  rename(region = continent) %>%
+  mutate(gdp_total = pop * gdpPercap)
+
+gap_2007 <- gap %>% filter(year == 2007)
+gap_1952 <- gap %>% filter(year == 1952)
+
+# weighted averages by region × year
+region_year <- gap %>%
+  group_by(region, year) %>%
+  summarise(
+    avg_lifeExp  = weighted.mean(lifeExp,  pop, na.rm = TRUE),
+    avg_gdpPercap = weighted.mean(gdpPercap, pop, na.rm = TRUE),
+    total_pop    = sum(pop, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# region summaries for 2007
+region_2007 <- region_year %>% filter(year == 2007)
+
+# value-box stats
+global_avg_2007   <- weighted.mean(gap_2007$lifeExp, gap_2007$pop)
+global_avg_1952   <- weighted.mean(gap_1952$lifeExp, gap_1952$pop)
+improvement       <- global_avg_2007 - global_avg_1952
+top_country_life  <- gap_2007 %>% slice_max(lifeExp, n = 1)
+bot_country_life  <- gap_2007 %>% slice_min(lifeExp, n = 1)
+top_country_gdp   <- gap_2007 %>% slice_max(gdpPercap, n = 1)
+bot_country_gdp   <- gap_2007 %>% slice_min(gdpPercap, n = 1)
+ratio_richpoor    <- round(top_country_gdp$gdpPercap / bot_country_gdp$gdpPercap)
+
+# growth table
+growth <- gap %>%
+  filter(year %in% c(1952, 2007),
+         country %in% c("Japan","South Korea","Norway","Germany",
+                         "United States","Brazil","China","India")) %>%
+  select(country, year, gdpPercap) %>%
+  pivot_wider(names_from = year, values_from = gdpPercap,
+              names_prefix = "yr_") %>%
+  mutate(gain = yr_2007 - yr_1952)
+
+# outlier table
+outliers <- gap_2007 %>%
+  filter(country %in% c("Cuba","Kuwait","Gabon","Sri Lanka",
+                         "Equatorial Guinea","Japan","Botswana")) %>%
+  select(country, region, gdpPercap, lifeExp) %>%
+  mutate(Story = case_when(
+    country == "Cuba"              ~ "High life exp despite modest GDP — universal healthcare",
+    country == "Kuwait"            ~ "Oil wealth; good outcomes but modest relative to income",
+    country == "Gabon"             ~ "Oil wealth not translating to population health",
+    country == "Sri Lanka"         ~ "Strong public health investment despite low income",
+    country == "Equatorial Guinea" ~ "Oil boom: very high GDP but poor health outcomes",
+    country == "Japan"             ~ "Highest life exp — diet, healthcare & social cohesion",
+    country == "Botswana"          ~ "HIV/AIDS epidemic depressed life exp despite growth"
+  ))
 ```
 
+# Life Expectancy
 
+## Row {height="120px"}
+
+### Global Average Life Expectancy (2007)
 
 ```{r}
-gap_07 <- gapminder %>% 
-  filter(year == 2007)
-
-highest_life_exp_country <- gap_07 %>% 
-  arrange(-lifeExp) %>% 
-  head(1) %>% 
-  pull(country)
-
-
-highest_life_exp_country1 <- gap_07 %>% 
-  arrange(-lifeExp) %>% 
-  head(1) %>% 
-  pull(lifeExp) %>% 
-  round(1)
-
-
-
-
-lowest_life_exp_country <- gap_07 %>% 
-  arrange(lifeExp) %>% 
-  head(1) %>% 
-  pull(country)
-
-
-lowest_life_exp_country1 <- gap_07 %>% 
-  arrange(lifeExp) %>% 
-  head(1) %>% 
-  pull(lifeExp) %>% 
-  round(1)
-  
-
-
-average_life_exp_value <- gap_07 %>% 
-  summarize(weighted.mean = sum(lifeExp * pop)/ sum(pop)) %>% 
-  round(1)
+bslib::value_box(
+  title   = "Global Average Life Expectancy (2007)",
+  value   = paste0(round(global_avg_2007, 1), " yrs"),
+  showcase = bsicons::bs_icon("globe"),
+  theme   = bslib::value_box_theme(bg = "#1d3461", fg = "#ffffff")
+)
 ```
 
+### Highest Life Expectancy (2007)
 
 ```{r}
-country_shapes <- rnaturalearth::ne_countries()
-
-
-gap_07 <- gap_07 %>% 
-  mutate(country_code = countrycode(country,
-                                     "country.name",
-                                     "iso3c"))
-
-#setdiff(gap_07$country_code, country_shapes$adm0_a3)
-
-gap_map <- left_join(country_shapes, gap_07, by = c("adm0_a3" = "country_code")) %>% 
-  mutate(tooltip_label = paste(country,
-                               round(lifeExp, 1),
-                               sep = ": ")) %>% 
-  ggplot()+
-  geom_sf(aes(fill = lifeExp, text = tooltip_label)) +
-  theme_void() +
-  theme(legend.position = "none")
-
-gap_map_ggplotly <- ggplotly(gap_map, tooltip = "text")
-  
-
+bslib::value_box(
+  title   = paste0("Highest: ", top_country_life$country),
+  value   = paste0(round(top_country_life$lifeExp, 1), " yrs"),
+  showcase = bsicons::bs_icon("arrow-up-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#2d6a4f", fg = "#ffffff")
+)
 ```
 
-
+### Lowest Life Expectancy (2007)
 
 ```{r}
-top_20_countries <- gap_07 %>% 
-  arrange(desc(lifeExp)) %>% 
-  head(20) %>% 
-  mutate(tooltip_label = paste(country,
-                               round(lifeExp, 1),
-                               sep = ": ")) %>%
-  ggplot(aes(y = reorder(country, lifeExp),
-             x = lifeExp,
-             fill = lifeExp,
-             text = tooltip_label))+
-  geom_col()+
+bslib::value_box(
+  title   = paste0("Lowest: ", bot_country_life$country),
+  value   = paste0(round(bot_country_life$lifeExp, 1), " yrs"),
+  showcase = bsicons::bs_icon("arrow-down-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#c94f2a", fg = "#ffffff")
+)
+```
+
+### Global Improvement Since 1952
+
+```{r}
+bslib::value_box(
+  title   = "Global improvement since 1952",
+  value   = paste0("+", round(improvement, 1), " yrs"),
+  showcase = bsicons::bs_icon("graph-up-arrow"),
+  theme   = bslib::value_box_theme(bg = "#7b4f9e", fg = "#ffffff")
+)
+```
+
+## Row {height="420px"}
+
+### Life Expectancy Over Time by Region {width="650"}
+
+```{r title = "Life Expectancy Over Time by Region"}
+#| fig-height: 5
+p1 <- region_year %>%
+  ggplot(aes(x = year, y = avg_lifeExp, color = region,
+             text = paste0(
+               "<b>", region, " — ", year, "</b><br>",
+               "Avg Life Exp: ", round(avg_lifeExp, 1), " yrs"
+             ))) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.2) +
+  scale_color_manual(values = region_colors, name = NULL) +
+  scale_x_continuous(breaks = seq(1952, 2007, 5)) +
+  labs(x = NULL, y = "Life Expectancy (years)",
+       title = "Regional trends in life expectancy (1952–2007)") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.minor = element_blank())
+
+ggplotly(p1, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = -0.15))
+```
+
+### Average Life Expectancy by Region (2007) {width="350"}
+
+```{r title = "Average Life Expectancy by Region (2007)"}
+#| fig-height: 5
+p2 <- region_2007 %>%
+  mutate(region = reorder(region, avg_lifeExp)) %>%
+  ggplot(aes(x = avg_lifeExp, y = region, fill = region,
+             text = paste0("<b>", region, "</b><br>",
+                           round(avg_lifeExp, 1), " years"))) +
+  geom_col(width = 0.65, show.legend = FALSE) +
+  geom_text(aes(label = round(avg_lifeExp, 1)),
+            hjust = -0.2, size = 3.5, color = "grey30") +
+  scale_fill_manual(values = region_colors) +
+  scale_x_continuous(limits = c(0, 90), expand = c(0, 0)) +
+  labs(x = "Life Expectancy (years)", y = NULL,
+       title = "Life expectancy by region, 2007") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(size = 13, face = "bold"))
+
+ggplotly(p2, tooltip = "text")
+```
+
+## Row {height="420px"}
+
+### Top 15 Countries — Life Expectancy (2007) {width="500"}
+
+```{r title = "Top 15 Countries: Life Expectancy (2007)"}
+#| fig-height: 5
+top15 <- gap_2007 %>%
+  slice_max(lifeExp, n = 15) %>%
+  mutate(country = reorder(country, lifeExp))
+
+p3 <- top15 %>%
+  ggplot(aes(x = lifeExp, y = country, fill = region,
+             text = paste0("<b>", country, "</b> (", region, ")<br>",
+                           round(lifeExp, 1), " years"))) +
+  geom_col(width = 0.7, show.legend = FALSE) +
   geom_text(aes(label = round(lifeExp, 1)),
-            nudge_x = -10,
-            color = "white")+
-  labs(y = "Country",
-       x = "Life Exp")+
-  theme(legend.position = "none")
-  
-  
-  
+            hjust = -0.2, size = 3.2, color = "grey30") +
+  scale_fill_manual(values = region_colors) +
+  scale_x_continuous(limits = c(75, 87), expand = c(0, 0)) +
+  labs(x = "Life Expectancy (years)", y = NULL,
+       title = "Top 15 countries, 2007") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(size = 12, face = "bold"))
 
-top_20_countries_ggplotly <- ggplotly(top_20_countries, tooltip = "text")
+ggplotly(p3, tooltip = "text")
 ```
 
+### Bottom 15 Countries — Life Expectancy (2007) {width="500"}
 
+```{r title = "Bottom 15 Countries: Life Expectancy (2007)"}
+#| fig-height: 5
+bot15 <- gap_2007 %>%
+  slice_min(lifeExp, n = 15) %>%
+  mutate(country = reorder(country, lifeExp))
 
-# HOME
+p4 <- bot15 %>%
+  ggplot(aes(x = lifeExp, y = country, fill = region,
+             text = paste0("<b>", country, "</b> (", region, ")<br>",
+                           round(lifeExp, 1), " years"))) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  geom_text(aes(label = round(lifeExp, 1)),
+            hjust = -0.2, size = 3.2, color = "grey30") +
+  scale_fill_manual(values = region_colors) +
+  scale_x_continuous(limits = c(35, 60), expand = c(0, 0)) +
+  labs(x = "Life Expectancy (years)", y = NULL,
+       title = "Bottom 15 countries, 2007") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(size = 12, face = "bold"))
 
-## Row 1 {height=35%}
+ggplotly(p4, tooltip = "text")
+```
 
+## Row {height="520px"}
 
-```{r}
-value_box(
-  title = "Highest life expectancy",
-  value = highest_life_exp_country1,
-  showcase = bsicons::bs_icon("heart"),
-  theme = value_box_theme(bg = "#518fd6"),
-  p(paste0("(", highest_life_exp_country, ")"))
-  
+### World Map — Life Expectancy (2007)
+
+```{r title = "World Map: Life Expectancy (2007)"}
+#| fig-height: 5
+world_sf <- ne_countries(scale = "medium", returnclass = "sf")
+
+world_joined <- world_sf %>%
+  left_join(
+    gap_2007 %>% select(country, lifeExp, region),
+    by = c("name_long" = "country")
+  )
+
+pal <- colorNumeric(
+  palette = c("#f5c07a", "#e8a64e", "#c2d48c", "#74c185", "#3a9b6d", "#1a6b4e", "#0a4530"),
+  domain  = c(35, 85),
+  na.color = "#dddddd"
 )
 
+leaflet(world_joined, options = leafletOptions(minZoom = 1)) %>%
+  addTiles(options = tileOptions(opacity = 0)) %>%
+  addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
+  addPolygons(
+    fillColor   = ~pal(lifeExp),
+    fillOpacity = 0.85,
+    color       = "white",
+    weight      = 0.5,
+    label       = ~paste0(name_long, ": ", ifelse(is.na(lifeExp), "N/A", paste0(round(lifeExp, 1), " yrs"))),
+    labelOptions = labelOptions(style = list("font-size" = "13px"))
+  ) %>%
+  addLegend(
+    pal      = pal,
+    values   = ~lifeExp,
+    title    = "Life Expectancy (yrs)",
+    position = "bottomright",
+    na.label = "No data"
+  ) %>%
+  setView(lng = 10, lat = 20, zoom = 2)
 ```
 
+## Row {height="500px"}
 
-
+### Country Ranking Table — Life Expectancy (2007) 
 
 ```{r}
-value_box(
-  title = "Lowest life expectancy",
-  value = lowest_life_exp_country1,
-  showcase = bsicons::bs_icon("thermometer"),
-  theme = value_box_theme(bg = "#214773"),
-  p(paste0("(", lowest_life_exp_country, ")"))
-  
-)
+rank_table <- gap_2007 %>%
+  arrange(desc(lifeExp)) %>%
+  mutate(
+    Rank   = row_number(),
+    `Life Exp (yrs)` = round(lifeExp, 1),
+    `GDP/cap ($)`    = dollar(round(gdpPercap)),
+    Population       = comma(pop)
+  ) %>%
+  select(Rank, Country = country, Region = region,
+         `Life Exp (yrs)`, `GDP/cap ($)`, Population)
 
-```
-
-
-
-
-```{r}
-value_box(
-  title = "Average life expectancy",
-  value = average_life_exp_value,
-  showcase = bsicons::bs_icon("graph-up"),
-  theme = value_box_theme(bg = "#3f71ab")
-)
-
-```
-
-
-## Row 2 {height=75%}
-
-### {width=70%}
-
-```{r title = "Map of Countries by Life Expactancy" }
-gap_map_ggplotly 
-
-```
-
-
-### {width=30%}
-
-```{r title = "Top 20 Countries by Life Expectancy"}
-top_20_countries_ggplotly
-```
-
-# DOWNLOAD DATA
-
-The data used in this dashboard is shown below and can be downloaded as CSV
-
-```{r}
-htmltools::browsable(
-  htmltools::tagList(
-    tags$h3("Gapminder Dataset"),  # optional title
-    
-    reactable(
-      gapminder,
-      elementId  = "gapminder-table",
-      searchable = TRUE,
-      filterable = TRUE,
-      striped    = TRUE,
-      highlight  = TRUE,
-      bordered   = TRUE,
-      defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = c(10, 25, 50, 100)
+DT::datatable(
+  rank_table,
+  filter    = "top",
+  rownames  = FALSE,
+  options   = list(
+    pageLength = 15,
+    dom        = "ftip",
+    columnDefs = list(list(className = "dt-center", targets = c(0, 3)))
+  ),
+  class = "compact stripe hover"
+) %>%
+  formatStyle(
+    "Region",
+    backgroundColor = styleEqual(
+      names(region_colors), unname(region_colors)
     ),
-    
-    tags$br(),
-    
-    tags$button(
-      "⬇ Download as CSV",
-      onclick = "Reactable.downloadDataCSV('gapminder-table')",
-      style = "
-        background-color: #2563eb;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-      "
+    color = "white",
+    fontWeight = "bold"
+  ) %>%
+  formatStyle(
+    "Life Exp (yrs)",
+    background = styleColorBar(range(gap_2007$lifeExp), "#2d6a4f"),
+    backgroundSize = "100% 80%",
+    backgroundRepeat = "no-repeat",
+    backgroundPosition = "center"
+  )
+```
+
+# GDP per Capita
+
+## Row {height="120px"}
+
+### Global Average GDP/cap (2007)
+
+```{r}
+bslib::value_box(
+  title   = "Global population-weighted GDP per capita (2007)",
+  value   = dollar(round(weighted.mean(gap_2007$gdpPercap, gap_2007$pop))),
+  showcase = bsicons::bs_icon("coin"),
+  theme   = bslib::value_box_theme(bg = "#1d3461", fg = "#ffffff")
+)
+```
+
+### Highest GDP per Capita (2007)
+
+```{r}
+bslib::value_box(
+  title   = paste0("Highest: ", top_country_gdp$country),
+  value   = dollar(round(top_country_gdp$gdpPercap)),
+  showcase = bsicons::bs_icon("arrow-up-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#2d6a4f", fg = "#ffffff")
+)
+```
+
+### Lowest GDP per Capita (2007)
+
+```{r}
+bslib::value_box(
+  title   = paste0("Lowest: ", bot_country_gdp$country),
+  value   = dollar(round(bot_country_gdp$gdpPercap)),
+  showcase = bsicons::bs_icon("arrow-down-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#c94f2a", fg = "#ffffff")
+)
+```
+
+### Richest-to-Poorest Ratio (2007)
+
+```{r}
+bslib::value_box(
+  title   = "Wealthiest vs. poorest country GDP/cap ratio",
+  value   = paste0(ratio_richpoor, "×"),
+  showcase = bsicons::bs_icon("bar-chart-fill"),
+  theme   = bslib::value_box_theme(bg = "#7b4f9e", fg = "#ffffff")
+)
+```
+
+## Row {height="420px"}
+
+### GDP per Capita Trends by Region (1952–2007) {width="650"}
+
+```{r}
+#| fig-height: 5
+p5 <- region_year %>%
+  ggplot(aes(x = year, y = avg_gdpPercap, color = region,
+             text = paste0(
+               "<b>", region, " — ", year, "</b><br>",
+               "Avg GDP/cap: $", comma(round(avg_gdpPercap))
+             ))) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.2) +
+  scale_color_manual(values = region_colors, name = NULL) +
+  scale_x_continuous(breaks = seq(1952, 2007, 5)) +
+  scale_y_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
+  labs(x = NULL, y = "GDP per Capita (USD)",
+       title = "Regional GDP per capita trends (1952–2007)") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.minor = element_blank())
+
+ggplotly(p5, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = -0.15))
+```
+
+### GDP per Capita by Region — 2007 {width="350"}
+
+```{r}
+#| fig-height: 5
+p6 <- region_2007 %>%
+  mutate(region = reorder(region, avg_gdpPercap)) %>%
+  ggplot(aes(x = avg_gdpPercap, y = region, fill = region,
+             text = paste0("<b>", region, "</b><br>$",
+                           comma(round(avg_gdpPercap))))) +
+  geom_col(width = 0.65, show.legend = FALSE) +
+  geom_text(aes(label = paste0("$", round(avg_gdpPercap/1000, 1), "k")),
+            hjust = -0.2, size = 3.5, color = "grey30") +
+  scale_fill_manual(values = region_colors) +
+  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k"),
+                     expand = expansion(mult = c(0, 0.15))) +
+  labs(x = "GDP per Capita (USD)", y = NULL,
+       title = "GDP/cap by region, 2007") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(size = 13, face = "bold"))
+
+ggplotly(p6, tooltip = "text")
+```
+
+## Row {height="420px"}
+
+### Distribution of Countries by Income Bracket (2007) {width="500"}
+
+```{r}
+#| fig-height: 5
+gap_2007_hist <- gap_2007 %>%
+  mutate(income_bracket = cut(
+    gdpPercap,
+    breaks = c(0, 1000, 2000, 5000, 10000, 20000, 40000, Inf),
+    labels = c("<$1k","$1k–2k","$2k–5k","$5k–10k","$10k–20k","$20k–40k",">$40k"),
+    right  = FALSE
+  )) %>%
+  count(income_bracket, region) %>%
+  group_by(income_bracket) %>%
+  mutate(total = sum(n))
+
+p7 <- gap_2007_hist %>%
+  ggplot(aes(x = income_bracket, y = n, fill = region,
+             text = paste0(region, ": ", n, " countries"))) +
+  geom_col(width = 0.75) +
+  scale_fill_manual(values = region_colors, name = NULL) +
+  labs(x = "Income Bracket", y = "Number of Countries",
+       title = "Countries by income bracket, 2007") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(angle = 30, hjust = 1))
+
+ggplotly(p7, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = -0.25))
+```
+
+### Top 15 Countries — GDP per Capita (2007) {width="500"}
+
+```{r}
+#| fig-height: 5
+top15_gdp <- gap_2007 %>%
+  slice_max(gdpPercap, n = 15) %>%
+  mutate(country = reorder(country, gdpPercap))
+
+p8 <- top15_gdp %>%
+  ggplot(aes(x = gdpPercap, y = country, fill = region,
+             text = paste0("<b>", country, "</b> (", region, ")<br>$",
+                           comma(round(gdpPercap))))) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  scale_fill_manual(values = region_colors) +
+  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k"),
+                     expand = expansion(mult = c(0, 0.1))) +
+  labs(x = "GDP per Capita (USD)", y = NULL,
+       title = "Top 15 by GDP/cap, 2007") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.title = element_text(size = 12, face = "bold"))
+
+ggplotly(p8, tooltip = "text")
+```
+
+## Row {height="400px"}
+
+### GDP Growth: 1952 → 2007 for Major Economies
+
+```{r}
+#| fig-height: 5
+growth_long <- growth %>%
+  pivot_longer(cols = c(yr_1952, yr_2007),
+               names_to = "year_label",
+               values_to = "gdpPercap") %>%
+  mutate(year_label = recode(year_label, yr_1952 = "1952", yr_2007 = "2007"),
+         country    = reorder(country, -gdpPercap))
+
+p9 <- growth_long %>%
+  ggplot(aes(x = country, y = gdpPercap, fill = year_label,
+             text = paste0("<b>", country, "</b> (", year_label, ")<br>$",
+                           comma(round(gdpPercap))))) +
+  geom_col(position = "dodge", width = 0.7) +
+  scale_fill_manual(values = c("1952" = "#9fb8d8", "2007" = "#1d3461"), name = NULL) +
+  scale_y_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
+  labs(x = NULL, y = "GDP per Capita (USD)",
+       title = "GDP per capita growth — 1952 vs 2007, major economies") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(angle = 20, hjust = 1))
+
+ggplotly(p9, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = 1.08))
+```
+
+# Relationship
+
+## Row {height="120px"}
+
+### Countries Analyzed
+
+```{r}
+bslib::value_box(
+  title   = "Countries in 2007 dataset",
+  value   = n_distinct(gap_2007$country),
+  showcase = bsicons::bs_icon("flag-fill"),
+  theme   = bslib::value_box_theme(bg = "#1d3461", fg = "#ffffff")
+)
+```
+
+### Correlation Pattern
+
+```{r}
+bslib::value_box(
+  title   = "Relationship type: diminishing returns at top",
+  value   = "Logarithmic",
+  showcase = bsicons::bs_icon("graph-up"),
+  theme   = bslib::value_box_theme(bg = "#2d6a4f", fg = "#ffffff")
+)
+```
+
+### Notable Exception
+
+```{r}
+bslib::value_box(
+  title   = "High GDP but moderate life expectancy",
+  value   = "Oil States",
+  showcase = bsicons::bs_icon("exclamation-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#c77d1a", fg = "#ffffff")
+)
+```
+
+### Trend Direction
+
+```{r}
+bslib::value_box(
+  title   = "Richer countries → longer lives, globally",
+  value   = "Strong Positive",
+  showcase = bsicons::bs_icon("arrow-up-right-circle-fill"),
+  theme   = bslib::value_box_theme(bg = "#7b4f9e", fg = "#ffffff")
+)
+```
+
+## Row {height="520px"}
+
+### GDP per Capita vs Life Expectancy — Bubble Chart (2007)
+
+```{r}
+#| fig-height: 6
+gap_2007_bubble <- gap_2007 %>%
+  mutate(
+    pop_size   = sqrt(pop) / 600,
+    gdp_log    = log10(gdpPercap),
+    label_text = paste0(
+      "<b>", country, "</b> (", region, ")<br>",
+      "Life Exp: ", round(lifeExp, 1), " yrs<br>",
+      "GDP/cap: $", comma(round(gdpPercap)), "<br>",
+      "Population: ", comma(pop)
     )
   )
-)
 
+p10 <- gap_2007_bubble %>%
+  ggplot(aes(x = gdpPercap, y = lifeExp, color = region, size = pop,
+             text = label_text)) +
+  geom_point(alpha = 0.72) +
+  scale_color_manual(values = region_colors, name = NULL) +
+  scale_size_continuous(range = c(2, 20), guide = "none") +
+  scale_x_log10(labels = dollar_format(), breaks = c(500, 1000, 5000, 10000, 50000)) +
+  labs(
+    x     = "GDP per Capita (USD, log scale)",
+    y     = "Life Expectancy (years)",
+    title = "Wealth vs. Health: GDP per capita vs. life expectancy (2007)",
+    subtitle = "Bubble size = population"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    plot.title      = element_text(size = 14, face = "bold"),
+    plot.subtitle   = element_text(size = 11, color = "grey50"),
+    panel.grid.minor = element_blank()
+  )
+
+ggplotly(p10, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = -0.15))
 ```
 
+## Row {height="440px"}
 
-# ABOUT
+### Regional Averages Comparison (2007) {width="500"}
 
-This data comes from the r `gapminder` package, and is originally sourced from the Gapminder Foundation.
+```{r}
+#| fig-height: 5
+region_indexed <- region_2007 %>%
+  mutate(
+    life_exp_norm  = avg_lifeExp / max(avg_lifeExp),
+    gdp_norm       = avg_gdpPercap / max(avg_gdpPercap)
+  ) %>%
+  pivot_longer(cols = c(life_exp_norm, gdp_norm),
+               names_to = "indicator", values_to = "value") %>%
+  mutate(
+    indicator = recode(indicator,
+      life_exp_norm = "Life Expectancy (indexed)",
+      gdp_norm      = "GDP per Capita (indexed)"
+    )
+  )
 
-The Gapminder Foundation is a non-profit venture registered in Stockholm, Sweden, that promotes sustainable global development and achievement of the United Nations Millennium Development Goals by increased use and understanding of statistics and other information about social, economic, and environmental development at local, national, and global levels.
+p11 <- region_indexed %>%
+  ggplot(aes(x = region, y = value, fill = indicator,
+             text = paste0("<b>", region, "</b><br>", indicator, ": ",
+                           round(value, 2)))) +
+  geom_col(position = "dodge", width = 0.7) +
+  scale_fill_manual(values = c(
+    "Life Expectancy (indexed)" = "#2d6a4f",
+    "GDP per Capita (indexed)"  = "#1d3461"
+  ), name = NULL) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = NULL, y = "Indexed Value (% of max)",
+       title = "Both indicators by region — indexed to max") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.major.x = element_blank())
 
-Gapminder was founded in 2005 by Ola Rosling, Anna Rosling Rönnlund, and Hans Rosling. The name Gapminder was derived from the "Mind the Gap" warning messages on the London Underground.
+ggplotly(p11, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = 1.1))
+```
 
-An example of one of Hans Rosling's videos is shown below:
+### Correlated Trajectory Over Time (1952–2007) {width="500"}
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/hVimVzgtD6w?si=0Mh45ZTF9z_W-6dO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+```{r}
+#| fig-height: 5
+p12 <- region_year %>%
+  ggplot(aes(x = avg_gdpPercap, y = avg_lifeExp,
+             color = region, group = region,
+             text = paste0(
+               "<b>", region, " — ", year, "</b><br>",
+               "GDP/cap: $", comma(round(avg_gdpPercap)), "<br>",
+               "Life Exp: ", round(avg_lifeExp, 1), " yrs"
+             ))) +
+  geom_path(linewidth = 1, arrow = arrow(length = unit(0.2, "cm"), type = "closed")) +
+  geom_point(aes(size = year == 2007), show.legend = FALSE) +
+  scale_color_manual(values = region_colors, name = NULL) +
+  scale_size_manual(values = c(`FALSE` = 1.5, `TRUE` = 4)) +
+  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
+  labs(x = "GDP per Capita (USD 000s)",
+       y = "Life Expectancy (years)",
+       title = "Trajectory: wealth vs. health (1952→2007)") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 13, face = "bold"),
+        panel.grid.minor = element_blank())
 
+ggplotly(p12, tooltip = "text") %>%
+  layout(legend = list(orientation = "h", y = -0.15))
+```
 
+## Row {height="380px"}
+
+### Notable Outliers — Countries That Defy the Wealth-Health Trend
+
+```{r  title = "Countries That Defy the Wealth-Health Trend"}
+DT::datatable(
+  outliers %>%
+    transmute(
+      Country   = country,
+      Region    = region,
+      `GDP/cap (2007)` = dollar(round(gdpPercap)),
+      `Life Exp (2007)` = paste0(round(lifeExp, 1), " yrs"),
+      `Key Story` = Story
+    ),
+  rownames = FALSE,
+  options  = list(
+    dom        = "t",
+    pageLength = 10,
+    columnDefs = list(list(width = "40%", targets = 4))
+  ),
+  class = "compact stripe hover"
+) %>%
+  formatStyle(
+    "Region",
+    backgroundColor = styleEqual(
+      names(region_colors), unname(region_colors)
+    ),
+    color = "white",
+    fontWeight = "bold"
+  )
+```
