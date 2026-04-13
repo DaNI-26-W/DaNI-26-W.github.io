@@ -32,7 +32,7 @@ if (!require(pacman)) install.packages("pacman")
 pacman::p_load(ggplot2, knitr, tidyr, plotly, janitor, DT, reactable, flexdashboard, gapminder, dplyr, scales, leaflet, sf, rnaturalearth, rnaturalearthdata, bslib, bsicons, htmltools)
 
 
-# ── colour palette 
+# colour palette 
 region_colors <- c(
   Africa   = "#2d6a4f",
   Americas = "#1d3461",
@@ -41,7 +41,7 @@ region_colors <- c(
   Oceania  = "#c77d1a"
 )
 
-# ── data preparation 
+# data preparation 
 gap <- gapminder::gapminder %>%
   rename(region = continent) %>%
   mutate(gdp_total = pop * gdpPercap)
@@ -101,7 +101,7 @@ outliers <- gap_2007 %>%
 
 # Life Expectancy
 
-## Row {height="120px"}
+## Row {height="160px"}
 
 ### Global Average Life Expectancy (2007)
 
@@ -153,53 +153,59 @@ bslib::value_box(
 
 ```{r title = "Life Expectancy Over Time by Region"}
 #| fig-height: 5
-p1 <- region_year %>%
-  ggplot(aes(x = year, y = avg_lifeExp, color = region,
-             text = paste0(
-               "<b>", region, " — ", year, "</b><br>",
-               "Avg Life Exp: ", round(avg_lifeExp, 1), " yrs"
-             ))) +
-  geom_line(linewidth = 1.1) +
-  geom_point(size = 2.2) +
-  scale_color_manual(values = region_colors, name = NULL) +
-  scale_x_continuous(breaks = seq(1952, 2007, 5)) +
-  labs(x = NULL, y = "Life Expectancy (years)",
-       title = "Regional trends in life expectancy (1952–2007)") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.minor = element_blank())
-
-ggplotly(p1, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = -0.15))
+plot_ly(region_year,
+        x = ~year,
+        y = ~avg_lifeExp,
+        color = ~region,
+        colors = region_colors,
+        type = "scatter",
+        mode = "lines+markers",
+        text = ~paste0("<b>", region, " — ", year, "</b><br>",
+                       "Avg Life Exp: ", round(avg_lifeExp, 1), " yrs"),
+        hoverinfo = "text") %>%
+  layout(
+    title = list(text = "Regional trends in life expectancy (1952–2007)",
+                 font = list(size = 13)),
+    xaxis = list(title = "", tickvals = seq(1952, 2007, 5)),
+    yaxis = list(title = "Life Expectancy (years)"),
+    legend = list(orientation = "h", y = -0.15)
+  )
 ```
 
-### Average Life Expectancy by Region (2007) {width="350"}
+### Average Life Expectancy by Region (2007) {width="650"}
 
 ```{r title = "Average Life Expectancy by Region (2007)"}
 #| fig-height: 5
-p2 <- region_2007 %>%
+region_2007 %>%
   mutate(region = reorder(region, avg_lifeExp)) %>%
-  ggplot(aes(x = avg_lifeExp, y = region, fill = region,
-             text = paste0("<b>", region, "</b><br>",
-                           round(avg_lifeExp, 1), " years"))) +
-  geom_col(width = 0.65, show.legend = FALSE) +
-  geom_text(aes(label = round(avg_lifeExp, 1)),
-            hjust = -0.2, size = 3.5, color = "grey30") +
-  scale_fill_manual(values = region_colors) +
-  scale_x_continuous(limits = c(0, 90), expand = c(0, 0)) +
-  labs(x = "Life Expectancy (years)", y = NULL,
-       title = "Life expectancy by region, 2007") +
-  theme_minimal(base_size = 12) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(size = 13, face = "bold"))
-
-ggplotly(p2, tooltip = "text")
+  plot_ly(
+    x         = ~avg_lifeExp,
+    y         = ~region,
+    type      = "bar",
+    orientation = "h",
+    color     = ~region,
+    colors    = region_colors,
+    text      = ~paste0("<b>", region, "</b><br>", round(avg_lifeExp, 1), " years"),
+    hoverinfo = "text",
+    textposition = "outside",
+    texttemplate = "%{x:.1f}",
+    showlegend = FALSE
+  ) %>%
+  layout(
+    title  = list(text = "Life expectancy by region, 2007",
+                  font = list(size = 13)),
+    xaxis  = list(title = "Life Expectancy (years)",
+                  range = c(0, 90),
+                  zeroline = FALSE),
+    yaxis  = list(title = ""),
+    margin = list(l = 10, r = 40),
+    bargap = 0.35
+  )
 ```
 
 ## Row {height="420px"}
 
-### Top 15 Countries — Life Expectancy (2007) {width="500"}
+### Top 15 Countries — Life Expectancy (2007) {width="650"}
 
 ```{r title = "Top 15 Countries: Life Expectancy (2007)"}
 #| fig-height: 5
@@ -207,25 +213,34 @@ top15 <- gap_2007 %>%
   slice_max(lifeExp, n = 15) %>%
   mutate(country = reorder(country, lifeExp))
 
-p3 <- top15 %>%
-  ggplot(aes(x = lifeExp, y = country, fill = region,
-             text = paste0("<b>", country, "</b> (", region, ")<br>",
-                           round(lifeExp, 1), " years"))) +
-  geom_col(width = 0.7, show.legend = FALSE) +
-  geom_text(aes(label = round(lifeExp, 1)),
-            hjust = -0.2, size = 3.2, color = "grey30") +
-  scale_fill_manual(values = region_colors) +
-  scale_x_continuous(limits = c(75, 87), expand = c(0, 0)) +
-  labs(x = "Life Expectancy (years)", y = NULL,
-       title = "Top 15 countries, 2007") +
-  theme_minimal(base_size = 11) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(size = 12, face = "bold"))
-
-ggplotly(p3, tooltip = "text")
+top15 %>%
+  plot_ly(
+    x            = ~lifeExp,
+    y            = ~country,
+    type         = "bar",
+    orientation  = "h",
+    color        = ~region,
+    colors       = region_colors,
+    text         = ~paste0("<b>", country, "</b> (", region, ")<br>",
+                           round(lifeExp, 1), " years"),
+    hoverinfo    = "text",
+    texttemplate = "%{x:.1f}",
+    textposition = "outside",
+    showlegend   = FALSE
+  ) %>%
+  layout(
+    title  = list(text = "Top 15 countries, 2007",
+                  font = list(size = 12)),
+    xaxis  = list(title = "Life Expectancy (years)",
+                  range = c(75, 87),
+                  zeroline = FALSE),
+    yaxis  = list(title = ""),
+    margin = list(l = 10, r = 40),
+    bargap = 0.3
+  )
 ```
 
-### Bottom 15 Countries — Life Expectancy (2007) {width="500"}
+### Bottom 15 Countries — Life Expectancy (2007) {width="650"}
 
 ```{r title = "Bottom 15 Countries: Life Expectancy (2007)"}
 #| fig-height: 5
@@ -233,22 +248,31 @@ bot15 <- gap_2007 %>%
   slice_min(lifeExp, n = 15) %>%
   mutate(country = reorder(country, lifeExp))
 
-p4 <- bot15 %>%
-  ggplot(aes(x = lifeExp, y = country, fill = region,
-             text = paste0("<b>", country, "</b> (", region, ")<br>",
-                           round(lifeExp, 1), " years"))) +
-  geom_col(width = 0.7, show.legend = FALSE) +
-  geom_text(aes(label = round(lifeExp, 1)),
-            hjust = -0.2, size = 3.2, color = "grey30") +
-  scale_fill_manual(values = region_colors) +
-  scale_x_continuous(limits = c(35, 60), expand = c(0, 0)) +
-  labs(x = "Life Expectancy (years)", y = NULL,
-       title = "Bottom 15 countries, 2007") +
-  theme_minimal(base_size = 11) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(size = 12, face = "bold"))
-
-ggplotly(p4, tooltip = "text")
+bot15 %>%
+  plot_ly(
+    x            = ~lifeExp,
+    y            = ~country,
+    type         = "bar",
+    orientation  = "h",
+    color        = ~region,
+    colors       = region_colors,
+    text         = ~paste0("<b>", country, "</b> (", region, ")<br>",
+                           round(lifeExp, 1), " years"),
+    hoverinfo    = "text",
+    texttemplate = "%{x:.1f}",
+    textposition = "outside",
+    showlegend   = FALSE
+  ) %>%
+  layout(
+    title  = list(text = "Bottom 15 countries, 2007",
+                  font = list(size = 12)),
+    xaxis  = list(title = "Life Expectancy (years)",
+                  range = c(35, 60),
+                  zeroline = FALSE),
+    yaxis  = list(title = ""),
+    margin = list(l = 10, r = 40),
+    bargap = 0.3
+  )
 ```
 
 ## Row {height="520px"}
@@ -338,13 +362,13 @@ DT::datatable(
 
 # GDP per Capita
 
-## Row {height="120px"}
+## Row {height="160px"}
 
 ### Global Average GDP/cap (2007)
 
 ```{r}
 bslib::value_box(
-  title   = "Global population-weighted GDP per capita (2007)",
+  title   = "Global pop-weighted GDP per capita (2007)",
   value   = dollar(round(weighted.mean(gap_2007$gdpPercap, gap_2007$pop))),
   showcase = bsicons::bs_icon("coin"),
   theme   = bslib::value_box_theme(bg = "#1d3461", fg = "#ffffff")
@@ -390,55 +414,69 @@ bslib::value_box(
 
 ```{r title = "GDP per Capita Trends by Region (1952–2007)"}
 #| fig-height: 5
-p5 <- region_year %>%
-  ggplot(aes(x = year, y = avg_gdpPercap, color = region,
-             text = paste0(
-               "<b>", region, " — ", year, "</b><br>",
-               "Avg GDP/cap: $", comma(round(avg_gdpPercap))
-             ))) +
-  geom_line(linewidth = 1.1) +
-  geom_point(size = 2.2) +
-  scale_color_manual(values = region_colors, name = NULL) +
-  scale_x_continuous(breaks = seq(1952, 2007, 5)) +
-  scale_y_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
-  labs(x = NULL, y = "GDP per Capita (USD)",
-       title = "Regional GDP per capita trends (1952–2007)") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.minor = element_blank())
+plot_ly(
+  region_year,
+  x         = ~year,
+  y         = ~avg_gdpPercap,
+  color     = ~region,
+  colors    = region_colors,
+  type      = "scatter",
+  mode      = "lines+markers",
+  text      = ~paste0(
+                "<b>", region, " — ", year, "</b><br>",
+                "Avg GDP/cap: $", comma(round(avg_gdpPercap))
+              ),
+  hoverinfo = "text"
+) %>%
+  layout(
+    title  = list(text = "Regional GDP per capita trends (1952–2007)",
+                  font = list(size = 13)),
+    xaxis  = list(title = "",
+                  tickvals = seq(1952, 2007, 5),
+                  ticktext = seq(1952, 2007, 5)),
+    yaxis  = list(title = "GDP per Capita (USD)",
+                  tickformat = "$.1fk"),
+    legend = list(orientation = "h", y = -0.15),
+    margin = list(b = 60)
+  )
 
-ggplotly(p5, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = -0.15))
+
 ```
 
-### GDP per Capita by Region — 2007 {width="350"}
+### GDP per Capita by Region — 2007 {width="650"}
 
 ```{r title = "GDP per Capita by Region (2007)"}
-#| fig-height: 5
-p6 <- region_2007 %>%
-  mutate(region = reorder(region, avg_gdpPercap)) %>%
-  ggplot(aes(x = avg_gdpPercap, y = region, fill = region,
-             text = paste0("<b>", region, "</b><br>$",
-                           comma(round(avg_gdpPercap))))) +
-  geom_col(width = 0.65, show.legend = FALSE) +
-  geom_text(aes(label = paste0("$", round(avg_gdpPercap/1000, 1), "k")),
-            hjust = -0.2, size = 3.5, color = "grey30") +
-  scale_fill_manual(values = region_colors) +
-  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k"),
-                     expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "GDP per Capita (USD)", y = NULL,
-       title = "GDP/cap by region, 2007") +
-  theme_minimal(base_size = 12) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(size = 13, face = "bold"))
 
-ggplotly(p6, tooltip = "text")
+#| fig-height: 5
+region_2007 %>%
+  mutate(region = reorder(region, avg_gdpPercap)) %>%
+  plot_ly(
+    x            = ~avg_gdpPercap,
+    y            = ~region,
+    type         = "bar",
+    orientation  = "h",
+    color        = ~region,
+    colors       = region_colors,
+    text         = ~paste0("<b>", region, "</b><br>$", comma(round(avg_gdpPercap))),
+    hoverinfo    = "text",
+    texttemplate = ~paste0("$", round(avg_gdpPercap/1000, 1), "k"),
+    textposition = "outside",
+    showlegend   = FALSE
+  ) %>%
+  layout(
+    title  = list(text = "GDP/cap by region, 2007", font = list(size = 13)),
+    xaxis  = list(title = "GDP per Capita (USD)",
+                  tickformat = "$.1fk",
+                  zeroline = FALSE),
+    yaxis  = list(title = ""),
+    margin = list(l = 10, r = 60),
+    bargap = 0.35
+  )
 ```
 
 ## Row {height="420px"}
 
-### Distribution of Countries by Income Bracket (2007) {width="500"}
+### Distribution of Countries by Income Bracket (2007) {width="650"}
 
 ```{r title = "Distribution of Countries by Income Bracket (2007)"}
 #| fig-height: 5
@@ -453,24 +491,27 @@ gap_2007_hist <- gap_2007 %>%
   group_by(income_bracket) %>%
   mutate(total = sum(n))
 
-p7 <- gap_2007_hist %>%
-  ggplot(aes(x = income_bracket, y = n, fill = region,
-             text = paste0(region, ": ", n, " countries"))) +
-  geom_col(width = 0.75) +
-  scale_fill_manual(values = region_colors, name = NULL) +
-  labs(x = "Income Bracket", y = "Number of Countries",
-       title = "Countries by income bracket, 2007") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.major.x = element_blank(),
-        axis.text.x = element_text(angle = 30, hjust = 1))
-
-ggplotly(p7, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = -0.25))
+plot_ly(
+  gap_2007_hist,
+  x         = ~income_bracket,
+  y         = ~n,
+  color     = ~region,
+  colors    = region_colors,
+  type      = "bar",
+  text      = ~paste0(region, ": ", n, " countries"),
+  hoverinfo = "text"
+) %>%
+  layout(
+    barmode = "stack",
+    title   = list(text = "Countries by income bracket, 2007", font = list(size = 13)),
+    xaxis   = list(title = "Income Bracket", tickangle = 30),
+    yaxis   = list(title = "Number of Countries"),
+    legend  = list(orientation = "h", y = -0.25),
+    margin  = list(b = 80)
+  )
 ```
 
-### Top 15 Countries — GDP per Capita (2007) {width="500"}
+### Top 15 Countries — GDP per Capita (2007) {width="650"}
 
 ```{r title = "Top 15 Countries — GDP per Capita (2007)"}
 #| fig-height: 5
@@ -478,21 +519,30 @@ top15_gdp <- gap_2007 %>%
   slice_max(gdpPercap, n = 15) %>%
   mutate(country = reorder(country, gdpPercap))
 
-p8 <- top15_gdp %>%
-  ggplot(aes(x = gdpPercap, y = country, fill = region,
-             text = paste0("<b>", country, "</b> (", region, ")<br>$",
-                           comma(round(gdpPercap))))) +
-  geom_col(width = 0.7, show.legend = FALSE) +
-  scale_fill_manual(values = region_colors) +
-  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k"),
-                     expand = expansion(mult = c(0, 0.1))) +
-  labs(x = "GDP per Capita (USD)", y = NULL,
-       title = "Top 15 by GDP/cap, 2007") +
-  theme_minimal(base_size = 11) +
-  theme(panel.grid.major.y = element_blank(),
-        plot.title = element_text(size = 12, face = "bold"))
-
-ggplotly(p8, tooltip = "text")
+top15_gdp %>%
+  plot_ly(
+    x            = ~gdpPercap,
+    y            = ~country,
+    type         = "bar",
+    orientation  = "h",
+    color        = ~region,
+    colors       = region_colors,
+    text         = ~paste0("<b>", country, "</b> (", region, ")<br>$",
+                           comma(round(gdpPercap))),
+    hoverinfo    = "text",
+    texttemplate = ~paste0("$", round(gdpPercap/1000, 1), "k"),
+    textposition = "outside",
+    showlegend   = FALSE
+  ) %>%
+  layout(
+    title  = list(text = "Top 15 by GDP/cap, 2007", font = list(size = 12)),
+    xaxis  = list(title = "GDP per Capita (USD)",
+                  tickformat = "$.1fk",
+                  zeroline = FALSE),
+    yaxis  = list(title = ""),
+    margin = list(l = 10, r = 60),
+    bargap = 0.3
+  )
 ```
 
 ## Row {height="400px"}
@@ -503,33 +553,36 @@ ggplotly(p8, tooltip = "text")
 #| fig-height: 5
 growth_long <- growth %>%
   pivot_longer(cols = c(yr_1952, yr_2007),
-               names_to = "year_label",
+               names_to  = "year_label",
                values_to = "gdpPercap") %>%
   mutate(year_label = recode(year_label, yr_1952 = "1952", yr_2007 = "2007"),
          country    = reorder(country, -gdpPercap))
 
-p9 <- growth_long %>%
-  ggplot(aes(x = country, y = gdpPercap, fill = year_label,
-             text = paste0("<b>", country, "</b> (", year_label, ")<br>$",
-                           comma(round(gdpPercap))))) +
-  geom_col(position = "dodge", width = 0.7) +
-  scale_fill_manual(values = c("1952" = "#9fb8d8", "2007" = "#1d3461"), name = NULL) +
-  scale_y_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
-  labs(x = NULL, y = "GDP per Capita (USD)",
-       title = "GDP per capita growth 1952 vs 2007, major economies") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "top",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.major.x = element_blank(),
-        axis.text.x = element_text(angle = 20, hjust = 1))
-
-ggplotly(p9, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = 1.08))
+plot_ly(
+  growth_long,
+  x         = ~country,
+  y         = ~gdpPercap,
+  color     = ~year_label,
+  colors    = c("1952" = "#9fb8d8", "2007" = "#1d3461"),
+  type      = "bar",
+  text      = ~paste0("<b>", country, "</b> (", year_label, ")<br>$",
+                      comma(round(gdpPercap))),
+  hoverinfo = "text"
+) %>%
+  layout(
+    barmode = "group",
+    title   = list(text = "GDP per capita growth 1952 vs 2007, major economies",
+                   font = list(size = 13)),
+    xaxis   = list(title = "", tickangle = 20),
+    yaxis   = list(title = "GDP per Capita (USD)", tickformat = "$.1fk"),
+    legend  = list(orientation = "h", y = 1.08),
+    margin  = list(b = 60)
+  )
 ```
 
 # Relationship
 
-## Row {height="120px"}
+## Row {height="195px"}
 
 ### Countries Analyzed
 
@@ -568,7 +621,7 @@ bslib::value_box(
 
 ```{r}
 bslib::value_box(
-  title   = "Richer countries → longer lives, globally",
+  title   = "Richer countries-longer lives, globally",
   value   = "Strong Positive",
   showcase = bsicons::bs_icon("arrow-up-right-circle-fill"),
   theme   = bslib::value_box_theme(bg = "#7b4f9e", fg = "#ffffff")
@@ -584,7 +637,6 @@ bslib::value_box(
 gap_2007_bubble <- gap_2007 %>%
   mutate(
     pop_size   = sqrt(pop) / 600,
-    gdp_log    = log10(gdpPercap),
     label_text = paste0(
       "<b>", country, "</b> (", region, ")<br>",
       "Life Exp: ", round(lifeExp, 1), " yrs<br>",
@@ -593,99 +645,138 @@ gap_2007_bubble <- gap_2007 %>%
     )
   )
 
-p10 <- gap_2007_bubble %>%
-  ggplot(aes(x = gdpPercap, y = lifeExp, color = region, size = pop,
-             text = label_text)) +
-  geom_point(alpha = 0.72) +
-  scale_color_manual(values = region_colors, name = NULL) +
-  scale_size_continuous(range = c(2, 20), guide = "none") +
-  scale_x_log10(labels = dollar_format(), breaks = c(500, 1000, 5000, 10000, 50000)) +
-  labs(
-    x     = "GDP per Capita (USD, log scale)",
-    y     = "Life Expectancy (years)",
-    title = "Wealth vs. Health: GDP per capita vs. life expectancy (2007)",
-    subtitle = "Bubble size = population"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    legend.position = "bottom",
-    plot.title      = element_text(size = 14, face = "bold"),
-    plot.subtitle   = element_text(size = 11, color = "grey50"),
-    panel.grid.minor = element_blank()
+plot_ly(
+  gap_2007_bubble,
+  x         = ~gdpPercap,
+  y         = ~lifeExp,
+  color     = ~region,
+  colors    = region_colors,
+  size      = ~pop,
+  sizes     = c(5, 60),
+  type      = "scatter",
+  mode      = "markers",
+  text      = ~label_text,
+  hoverinfo = "text",
+  marker    = list(opacity = 0.72, sizemode = "diameter")
+) %>%
+  layout(
+    title  = list(
+      text = "Wealth vs. Health: GDP per capita vs. life expectancy (2007)",
+      font = list(size = 14)
+    ),
+    xaxis  = list(
+      title = "GDP per Capita (USD, log scale)",
+      type  = "log",
+      tickvals = c(500, 1000, 5000, 10000, 50000),
+      ticktext = c("$500", "$1,000", "$5,000", "$10,000", "$50,000")
+    ),
+    yaxis  = list(title = "Life Expectancy (years)"),
+    legend = list(orientation = "h", y = -0.15),
+    margin = list(b = 60)
   )
-
-ggplotly(p10, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = -0.15))
 ```
 
 ## Row {height="440px"}
 
-### Regional Averages Comparison (2007) {width="500"}
+### Regional Averages Comparison (2007) {width="650"}
 
 ```{r title = "Regional Averages Comparison (2007)"}
 #| fig-height: 5
 region_indexed <- region_2007 %>%
   mutate(
-    life_exp_norm  = avg_lifeExp / max(avg_lifeExp),
-    gdp_norm       = avg_gdpPercap / max(avg_gdpPercap)
+    life_exp_norm = avg_lifeExp  / max(avg_lifeExp),
+    gdp_norm      = avg_gdpPercap / max(avg_gdpPercap)
   ) %>%
   pivot_longer(cols = c(life_exp_norm, gdp_norm),
-               names_to = "indicator", values_to = "value") %>%
-  mutate(
-    indicator = recode(indicator,
-      life_exp_norm = "Life Expectancy (indexed)",
-      gdp_norm      = "GDP per Capita (indexed)"
-    )
-  )
+               names_to  = "indicator",
+               values_to = "value") %>%
+  mutate(indicator = recode(indicator,
+    life_exp_norm = "Life Expectancy (indexed)",
+    gdp_norm      = "GDP per Capita (indexed)"
+  ))
 
-p11 <- region_indexed %>%
-  ggplot(aes(x = region, y = value, fill = indicator,
-             text = paste0("<b>", region, "</b><br>", indicator, ": ",
-                           round(value, 2)))) +
-  geom_col(position = "dodge", width = 0.7) +
-  scale_fill_manual(values = c(
+plot_ly(
+  region_indexed,
+  x         = ~region,
+  y         = ~value,
+  color     = ~indicator,
+  colors    = c(
     "Life Expectancy (indexed)" = "#2d6a4f",
     "GDP per Capita (indexed)"  = "#1d3461"
-  ), name = NULL) +
-  scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Indexed Value (% of max)",
-       title = "Both indicators by region-indexed to max") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "top",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.major.x = element_blank())
-
-ggplotly(p11, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = 1.1))
+  ),
+  type      = "bar",
+  text      = ~paste0("<b>", region, "</b><br>", indicator, ": ", round(value, 2)),
+  hoverinfo = "text"
+) %>%
+  layout(
+    barmode = "group",
+    title   = list(text = "Both indicators by region-indexed to max",
+                   font = list(size = 13)),
+    xaxis   = list(title = ""),
+    yaxis   = list(title = "Indexed Value (% of max)",
+                   tickformat = ".0%"),
+    legend  = list(orientation = "h", y = 1.1),
+    margin  = list(b = 40)
+  )
 ```
 
-### Correlated Trajectory Over Time (1952–2007) {width="500"}
+### Correlated Trajectory Over Time (1952–2007) {width="650"}
 
 ```{r title = "Correlated Trajectory Over Time (1952–2007)"}
 #| fig-height: 5
-p12 <- region_year %>%
-  ggplot(aes(x = avg_gdpPercap, y = avg_lifeExp,
-             color = region, group = region,
-             text = paste0(
-               "<b>", region, " — ", year, "</b><br>",
-               "GDP/cap: $", comma(round(avg_gdpPercap)), "<br>",
-               "Life Exp: ", round(avg_lifeExp, 1), " yrs"
-             ))) +
-  geom_path(linewidth = 1, arrow = arrow(length = unit(0.2, "cm"), type = "closed")) +
-  geom_point(aes(size = year == 2007), show.legend = FALSE) +
-  scale_color_manual(values = region_colors, name = NULL) +
-  scale_size_manual(values = c(`FALSE` = 1.5, `TRUE` = 4)) +
-  scale_x_continuous(labels = dollar_format(scale = 1/1000, suffix = "k")) +
-  labs(x = "GDP per Capita (USD 000s)",
-       y = "Life Expectancy (years)",
-       title = "Trajectory: wealth vs. health (1952-2007)") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 13, face = "bold"),
-        panel.grid.minor = element_blank())
+# Split into regular points and 2007 highlighted points
+regions <- unique(region_year$region)
 
-ggplotly(p12, tooltip = "text") %>%
-  layout(legend = list(orientation = "h", y = -0.15))
+p12 <- plot_ly()
+
+for (r in regions) {
+  df_r <- region_year %>% filter(region == r) %>% arrange(year)
+
+  # Path line with arrow via annotation — add line trace
+  p12 <- p12 %>%
+    add_trace(
+      data      = df_r,
+      x         = ~avg_gdpPercap,
+      y         = ~avg_lifeExp,
+      type      = "scatter",
+      mode      = "lines+markers",
+      name      = r,
+      color     = I(region_colors[r]),
+      text      = ~paste0(
+                    "<b>", region, " — ", year, "</b><br>",
+                    "GDP/cap: $", comma(round(avg_gdpPercap)), "<br>",
+                    "Life Exp: ", round(avg_lifeExp, 1), " yrs"
+                  ),
+      hoverinfo = "text",
+      marker    = list(size = 5),
+      line      = list(width = 1.8),
+      showlegend = TRUE
+    ) %>%
+    # Highlight 2007 point
+    add_trace(
+      data      = df_r %>% filter(year == 2007),
+      x         = ~avg_gdpPercap,
+      y         = ~avg_lifeExp,
+      type      = "scatter",
+      mode      = "markers",
+      name      = r,
+      color     = I(region_colors[r]),
+      marker    = list(size = 10),
+      hoverinfo = "skip",
+      showlegend = FALSE
+    )
+}
+
+p12 %>%
+  layout(
+    title  = list(text = "Trajectory: wealth vs. health (1952–2007)",
+                  font = list(size = 13)),
+    xaxis  = list(title = "GDP per Capita (USD 000s)",
+                  tickformat = "$.1fk"),
+    yaxis  = list(title = "Life Expectancy (years)"),
+    legend = list(orientation = "h", y = -0.15),
+    margin = list(b = 60)
+  )
 ```
 
 ## Row {height="380px"}
@@ -864,7 +955,7 @@ htmltools::tagList(
 
 ## Row {height="auto"}
 
-### Overview & Objectives {width="500"}
+### Overview & Objectives {width="650"}
 
 ```{r}
 htmltools::div(
@@ -909,7 +1000,7 @@ htmltools::div(
 )
 ```
 
-### Key Findings — Life Expectancy {width="500"}
+### Key Findings — Life Expectancy {width="650"}
 
 ```{r}
 htmltools::div(
@@ -955,7 +1046,7 @@ htmltools::div(
 
 ## Row {height="auto"}
 
-### Key Findings — GDP per Capita {width="500"}
+### Key Findings — GDP per Capita {width="650"}
 
 ```{r}
 htmltools::div(
@@ -1001,7 +1092,7 @@ htmltools::div(
 )
 ```
 
-### Key Findings — The Relationship {width="500"}
+### Key Findings — The Relationship {width="650"}
 
 ```{r}
 htmltools::div(
