@@ -101,7 +101,7 @@ outliers <- gap_2007 %>%
 
 # Life Expectancy
 
-## Row {height="160px"}
+## Row {height="200px"}
 
 ### Global Average Life Expectancy (2007)
 
@@ -362,7 +362,7 @@ DT::datatable(
 
 # GDP per Capita
 
-## Row {height="160px"}
+## Row {height="200px"}
 
 ### Global Average GDP/cap (2007)
 
@@ -547,7 +547,7 @@ top15_gdp %>%
 
 ## Row {height="400px"}
 
-### GDP Growth: 1952 → 2007 for Major Economies
+### GDP Growth: 1952 - 2007 for Major Economies
 
 ```{r title = "GDP Growth: 1952 - 2007 for Major Economies"}
 #| fig-height: 5
@@ -582,7 +582,7 @@ plot_ly(
 
 # Relationship
 
-## Row {height="195px"}
+## Row {height="220px"}
 
 ### Countries Analyzed
 
@@ -815,7 +815,7 @@ DT::datatable(
 
 # Data {data-icon="fa-table"}
 
-## Row {height="60px"}
+## Row {height="100px"}
 
 ### {.no-title}
 
