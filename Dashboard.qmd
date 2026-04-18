@@ -1,5 +1,5 @@
 ---
-title: "Gapminder World Dashboard"
+title: "Does Money Buy Years? A Global Dashboard of Wealth and Life Expectancy"
 format:
   dashboard:
     orientation: rows
